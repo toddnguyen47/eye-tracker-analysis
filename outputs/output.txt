@@ -1,0 +1,4 @@
+Total number of fixations: 36
+Total fixation duration: 342397.0
+Mean fixation duration: 353.350877193
+Standard deviation fixation duration: 291.849829602

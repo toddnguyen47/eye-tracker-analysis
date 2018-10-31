@@ -1,0 +1,17 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+numpy = "==1.15.2"
+pandas = "==0.23.4"
+python-dateutil = "==2.7.3"
+pytz = "==2018.5"
+six = "==1.11.0"
+
+[dev-packages]
+"flake8" = "*"
+
+[requires]
+python_version = "3.7"
