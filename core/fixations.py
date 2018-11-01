@@ -98,4 +98,42 @@ def get_saccade_length(csv_file):
     list_of_coordinates = []
 
     for index, row in df.iterrows():
-        pass
+        x_coord = row['FixationX']
+        y_coord = row['FixationY']
+        cur_task = row['Current_task']
+        list_of_coordinates.append([cur_task, x_coord, y_coord])
+    
+    filename = os.path.join(os.getcwd(), "outputs", "saccades.csv")
+    with open(filename, "w") as file:
+        file.write("Current_task,FixationX,FixationY,SaccadeLength\n")
+        # first fixation has no saccade length
+        first_fixation = list_of_coordinates[0]
+        file.write(",".join((str(first_fixation[0]), str(first_fixation[1]),
+                             str(first_fixation[2]), "N/A")))
+        file.write("\n")
+
+        # Skip the first fixation since we cannot calculate the saccade length
+        # for the first fixation
+        for i in range(1, len(list_of_coordinates)):
+            cur_fixation  = list_of_coordinates[i]
+            prev_fixation = list_of_coordinates[i - 1]
+            
+            # Get the x and y coordinates of current fixation and previous fixation
+            cur_x  = cur_fixation[1]
+            cur_y  = cur_fixation[2]
+            prev_x = prev_fixation[1]
+            prev_y = prev_fixation[2]
+
+            # Use the distance formula to calculate saccade length
+            # c = sqrt(a^2 + b^2)
+            x_dist = cur_x - prev_x
+            y_dist = cur_y - prev_y
+            saccade_length = math.sqrt(x_dist**2 + y_dist**2)
+
+            # Write to csv
+            # Current_task, x, y, saccade_length
+            file.write(",".join((str(cur_fixation[0]), str(cur_x),
+                                 str(cur_y), str(saccade_length))))
+            file.write("\n")
+
+    print("Finished calculating saccades")
