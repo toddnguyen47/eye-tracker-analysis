@@ -65,21 +65,22 @@ def collapse_to_fixations(pd_dataframe):
         # if No
         if overwrite.lower() == "n":
             print("Exiting...")
-        else:
-            new_df = pd.DataFrame(columns=pd_dataframe.columns)
-            fixation_included = set()
-            # Iterate over all the rows
-            # Reference: https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
-            for index, row in pd_dataframe.iterrows():
-                # Only care about rows with a FixationSeq value
-                fixation_seq = row['FixationSeq']
-                # Ignore all NaN values and only add if the fixation is not included yet
-                if not math.isnan(fixation_seq) and fixation_seq not in fixation_included:
-                    fixation_included.add(fixation_seq)
-                    new_df = new_df.append(row)
-                
-            new_df.to_csv(params.COLLAPSED_CSV_FILENAME)
-            print("Finished exporting")
+            return
+
+    new_df = pd.DataFrame(columns=pd_dataframe.columns)
+    fixation_included = set()
+    # Iterate over all the rows
+    # Reference: https://stackoverflow.com/questions/16476924/how-to-iterate-over-rows-in-a-dataframe-in-pandas
+    for index, row in pd_dataframe.iterrows():
+        # Only care about rows with a FixationSeq value
+        fixation_seq = row['FixationSeq']
+        # Ignore all NaN values and only add if the fixation is not included yet
+        if not math.isnan(fixation_seq) and fixation_seq not in fixation_included:
+            fixation_included.add(fixation_seq)
+            new_df = new_df.append(row)
+
+    new_df.to_csv(params.COLLAPSED_CSV_FILENAME)
+    print("Finished exporting")
 
 
 def output_to_txt(list_of_str, write_to_console=False):
@@ -90,3 +91,11 @@ def output_to_txt(list_of_str, write_to_console=False):
 
             if write_to_console:
                 print(string1)
+
+
+def get_saccade_length(csv_file):
+    df = pd.read_csv(csv_file, sep=",", header=0, index_col=False)
+    list_of_coordinates = []
+
+    for index, row in df.iterrows():
+        pass
