@@ -1,6 +1,7 @@
 # Custom files/folders
 sample_data/p7_extended_DONOTINCLUDE.csv
 .vscode/
+run_pythonenv.bat
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -1,5 +1,6 @@
 # import EMDAT_src
 import core.fixations as fixations
+import core.calculations as calculations
 import params
 import sys
 
@@ -23,7 +24,7 @@ if __name__ == "__main__":
             fixations.collapse_to_fixations(params.INPUT_CSV_FILENAME)
         # saccade_calc
         elif argument == valid_arguments[1]:
-            fixations.get_saccade_length(params.INPUT_CSV_FILENAME)
+            calculations.calculate(params.COLLAPSED_CSV_FILENAME)
         else:
             print("Invalid command line argument.")
             print_error()
