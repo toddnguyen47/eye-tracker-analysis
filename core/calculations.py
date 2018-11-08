@@ -10,8 +10,8 @@ import pandas as pd
 import params
 import core.saccades as saccades
 
-HEADERS = [ "Current_task", "FixationX", "FixationY", "SaccadeLength", "SaccadeAbsoluteAngle",
-            "SaccadeRelativeAngle"]
+HEADERS = [ "Current_task", "FixationX", "FixationY", "SaccadeLength", "SaccadeAbsoluteAngleDegrees",
+            "SaccadeRelativeAngleDegrees"]
 
 
 def calculate(csv_file):
@@ -30,7 +30,6 @@ def calculate(csv_file):
         for header in HEADERS:
             file.write("".join((header, ",")))
         file.write("\n")
-
 
     # Extracct current_task and coords first
     for index, row in df.iterrows():
@@ -54,18 +53,20 @@ def calculate(csv_file):
             if (i - 1 >= 0):
                 prev_coords = coords_list[i - 1]
                 saccade_length = saccades.calc_saccade_length(cur_coords, prev_coords)
-                saccade_absolute_angle = saccades.calc_abs_angle(cur_coords, prev_coords)
+                saccade_absolute_angle = saccades.calc_abs_angle(cur_coords, prev_coords, use_degrees=True)
 
                 # If it is the last i, we cannot calculate relative angles
                 if (i + 1 < max_len):
                     next_coords = coords_list[i + 1]
-                    saccade_relative_angle = saccades.calc_rel_angle(cur_coords, prev_coords, next_coords)
+                    saccade_relative_angle = saccades.calc_rel_angle(cur_coords, prev_coords, next_coords, use_degrees=True)
 
             csv_file_str = ",".join((   cur_task, str(cur_coords[0]), str(cur_coords[1]),
                                         str(saccade_length), str(saccade_absolute_angle),
                                         str(saccade_relative_angle)))
             file.write(csv_file_str)
             file.write("\n")
+    
+    print("Finished writing to {}".format(params.MAIN_OUTPUT_FILE.replace("\\", "/")))
 
 
 def output_to_txt(list_of_str, write_to_console=False):
