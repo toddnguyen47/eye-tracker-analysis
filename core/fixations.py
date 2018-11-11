@@ -17,7 +17,7 @@ import os
 def read_in_csv(csv_file):
     df = pd.read_csv(csv_file, sep=",", header=6, index_col=False)
 
-    collapse_to_fixations(df)
+    print(df.to_string())
 
     # total_num_fixations = get_total_num_fixations(df)
     # fixation_duration_col = df['FixationDuration']
@@ -57,7 +57,9 @@ def get_total_num_fixations(pd_dataframe):
     return fixation_count
 
 
-def collapse_to_fixations(pd_dataframe):
+def collapse_to_fixations(csv_file):
+    pd_dataframe = pd.read_csv(csv_file, sep=",", header=6, index_col=False)
+
     # Export to csv file
     # If file exists and user does not want to overwrite, do nothing
     if (os.path.exists(params.COLLAPSED_CSV_FILENAME)):
@@ -77,7 +79,9 @@ def collapse_to_fixations(pd_dataframe):
         # Ignore all NaN values and only add if the fixation is not included yet
         if not math.isnan(fixation_seq) and fixation_seq not in fixation_included:
             fixation_included.add(fixation_seq)
-            new_df = new_df.append(row)
+            new_df_len = len(new_df.index)
+            new_df.loc[new_df_len] = row
 
-    new_df.to_csv(params.COLLAPSED_CSV_FILENAME)
-    print("Finished exporting")
+    new_df.to_csv(params.COLLAPSED_CSV_FILENAME, index=False)
+    print("Finished exporting to {}".
+          format(params.COLLAPSED_CSV_FILENAME).replace("\\", "/"))
