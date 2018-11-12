@@ -25,7 +25,7 @@ if __name__ == "__main__":
             fixations.collapse_to_fixations(params.INPUT_CSV_FILENAME)
         # label graphs
         elif argument == valid_arguments[1]:
-            label_graphs.label_graphs(params.COLLAPSED_FILE_TO_LABEL)
+            label_graphs.label_graphs(params.COLLAPSED_CSV_FILENAME)
         # saccade_calc
         elif argument == valid_arguments[2]:
             calculations.calculate(params.COLLAPSED_CSV_FILENAME)
