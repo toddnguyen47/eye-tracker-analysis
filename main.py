@@ -5,7 +5,7 @@ import core.label_graphs as label_graphs
 import params
 import sys
 
-valid_arguments = ["collapse", "label_graphs", "saccade_calc"]
+valid_arguments = ["fixation collapse", "label_graphs", "saccade_calc"]
 
 
 def print_commands():
