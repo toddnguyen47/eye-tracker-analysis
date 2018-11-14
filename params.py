@@ -8,10 +8,10 @@ cur_dir = os.getcwd()
 
 # Input extended filename
 # INPUT_CSV_FILENAME = os.path.join(cur_dir, "sample_data/p7_extended_DONOTINCLUDE.csv")
-INPUT_CSV_FILENAME = "Z:/DocumentsAndStuff/Documents/Research/7_output.csv"
+INPUT_CSV_FILENAME = "Z:/DocumentsAndStuff/Documents/Research/10_output.csv"
 
 # Collapsed filename
-COLLAPSED_CSV_FILENAME = os.path.join(cur_dir, "outputs/collapsed.csv")
+COLLAPSED_CSV_FILENAME = os.path.join(cur_dir, "outputs/10_collapsed.csv")
 
 # Graph information
 GRAPH_INFO_FILE = "Z:\DocumentsAndStuff\Downloads\CompletionTime.csv"

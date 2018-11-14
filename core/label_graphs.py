@@ -11,12 +11,11 @@ def label_graphs(filename):
     # ARGUMENTS
     filename    -> The name of the CSV file.
     """
-    new_filename = "".join((filename.split(".csv")[0], "_graphlabel.csv"))
     overwrite = "y"
     # If output file exists
-    if (os.path.exists(new_filename)):
+    if (os.path.exists(filename)):
         overwrite = input("File \"{}\" exists. Would you like to overwrite? (Y/N): "
-                          .format(new_filename))
+                          .format(filename).replace("\\", "/"))
 
     if overwrite.strip().lower() == "y":
         df = pd.read_csv(filename, index_col=False)
@@ -53,8 +52,8 @@ def label_graphs(filename):
         # Add the row "Graph" back into the dataframe
         df['Graph'] = graph_list
 
-        df.to_csv(new_filename, index=False)
-        print("Finished exporting to {}".format(new_filename))
+        df.to_csv(filename, index=False)
+        print("Finished exporting to {}".format(filename).replace("\\", "/"))
 
     else:
         print("Exiting...")

@@ -69,7 +69,7 @@ def calculate(csv_file):
             saccade_lengths.append(saccade_length)
             saccade_abs_angles.append(saccade_absolute_angle)
             saccade_rel_angles.append(saccade_relative_angle)
-        
+
         df['Saccade_length'] = saccade_lengths
         df['Saccade_absolute_angle'] = saccade_absolute_angle
         df['Saccade_relative_angle'] = saccade_rel_angles
