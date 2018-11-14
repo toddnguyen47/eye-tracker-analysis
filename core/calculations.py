@@ -43,9 +43,9 @@ def calculate(csv_file):
             coords_list.append([x_coord, y_coord])
 
         # Calculate the saccade length, saccade absolute angle, and saccade relative angle
-        saccade_lengths = []
-        saccade_abs_angles = []
-        saccade_rel_angles = []
+        saccade_lengths_list = []
+        saccade_abs_angles_list = []
+        saccade_rel_angles_list = []
 
         max_len = len(coords_list)
         for i in range(max_len):
@@ -66,13 +66,13 @@ def calculate(csv_file):
                     next_coords = coords_list[i + 1]
                     saccade_relative_angle = saccades.calc_rel_angle(cur_coords, prev_coords, next_coords, use_degrees=True)
 
-            saccade_lengths.append(saccade_length)
-            saccade_abs_angles.append(saccade_absolute_angle)
-            saccade_rel_angles.append(saccade_relative_angle)
+            saccade_lengths_list.append(saccade_length)
+            saccade_abs_angles_list.append(saccade_absolute_angle)
+            saccade_rel_angles_list.append(saccade_relative_angle)
 
-        df['Saccade_length'] = saccade_lengths
-        df['Saccade_absolute_angle'] = saccade_absolute_angle
-        df['Saccade_relative_angle'] = saccade_rel_angles
+        df['Saccade_length'] = saccade_lengths_list
+        df['Saccade_absolute_angle'] = saccade_abs_angles_list
+        df['Saccade_relative_angle'] = saccade_rel_angles_list
         df.to_csv(params.COLLAPSED_CSV_FILENAME, index=False)
         print("Finished writing to {}".format(params.COLLAPSED_CSV_FILENAME.replace("\\", "/")))
 
