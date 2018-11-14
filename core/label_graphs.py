@@ -46,7 +46,11 @@ def label_graphs(filename):
             if cur_task.lower() != "pretask":
                 # find the current task in the smaller dataframe
                 graph_row = name_based_df[name_based_df["TaskID"].str.contains(cur_task)]
-                graph_temp = graph_row["graph"].values[0]
+                try:
+                    graph_temp = graph_row["graph"].values[0]
+                except IndexError as error:
+                    # print(error)
+                    raise IndexError("Please make sure the participant's First and Last Name is correctly formatted. The format should be \"FirstName LastName\", e.g. \"Jane Lastnameton\"")
             graph_list.append(graph_temp)
         
         # Add the row "Graph" back into the dataframe

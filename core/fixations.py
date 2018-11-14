@@ -90,7 +90,8 @@ def collapse_to_fixations(csv_file):
             curtime = time.time()
             elapsed_time = curtime - starttime
             count += 1
-            print('\r{:d}/{:d}, {:.2%}, {:.2f} seconds elapsed'.format(count, num_rows, count/num_rows, elapsed_time), end="")
+            progress = params.progress_bar(count, num_rows, elapsed_time)
+            print(progress, end="\r")
 
         print("")
         new_df.to_csv(params.COLLAPSED_CSV_FILENAME, index=False)
