@@ -24,9 +24,9 @@ def calculate(csv_file):
     """
     overwrite = "y"
     # If file exists
-    if (os.path.exists(params.COLLAPSED_CSV_FILENAME)):
+    if (os.path.exists(csv_file)):
         overwrite = input("\"{}\" exists. Would you like to overwrite? (Y/N): "
-                          .format(params.COLLAPSED_CSV_FILENAME).replace("\\", "/"))
+                          .format(csv_file).replace("\\", "/"))
 
     if (overwrite.strip().lower() == "y"):
         df = pd.read_csv(csv_file)
@@ -73,8 +73,8 @@ def calculate(csv_file):
         df['Saccade_length'] = saccade_lengths_list
         df['Saccade_absolute_angle'] = saccade_abs_angles_list
         df['Saccade_relative_angle'] = saccade_rel_angles_list
-        df.to_csv(params.COLLAPSED_CSV_FILENAME, index=False)
-        print("Finished writing to {}".format(params.COLLAPSED_CSV_FILENAME.replace("\\", "/")))
+        df.to_csv(csv_file, index=False)
+        print("Finished writing to {}".format(csv_file.replace("\\", "/")))
 
     else:
         print("Exiting...")

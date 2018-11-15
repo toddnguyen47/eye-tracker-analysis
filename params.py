@@ -14,7 +14,7 @@ INPUT_CSV_FILENAME = "Z:/DocumentsAndStuff/Documents/Research/20_output.csv"
 COLLAPSED_CSV_FILENAME = os.path.join(cur_dir, "outputs/20_collapsed.csv")
 
 # Graph information
-GRAPH_INFO_FILE = "Z:\DocumentsAndStuff\Downloads\CompletionTime.csv"
+GRAPH_INFO_FILE = "Z:/DocumentsAndStuff/Documents/Research/CompletionTime.csv"
 
 
 def progress_bar(current, total, elapsed_time, char_to_use="#"):
