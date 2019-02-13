@@ -2,10 +2,10 @@
 import core.fixations as fixations
 import core.calculations as calculations
 import core.label_graphs as label_graphs
+import core.get_stats as get_stats
 import params
-import sys
 
-valid_arguments = ["fixation_collapse", "label_graphs", "saccade_calc"]
+valid_arguments = ["fixation_collapse", "label_graphs", "saccade_calc", "stats_calc"]
 
 
 def print_commands():
@@ -29,6 +29,11 @@ if __name__ == "__main__":
     # saccade_calc
     elif argument == "3" or argument == valid_arguments[2]:
         calculations.calculate(params.COLLAPSED_CSV_FILENAME)
+    # calculate stats
+    elif argument == "4" or argument == valid_arguments[3]:
+        columns_to_obtain = ["Saccade_length", "Saccade_absolute_angle", "Saccade_relative_angle"]
+        get_stats.get_stats(infile=params.COLLAPSED_CSV_FILENAME, outfile=None,
+                            col_names_list=columns_to_obtain)
     else:
         print("Invalid command line argument.")
         print_commands()
