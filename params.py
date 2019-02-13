@@ -13,11 +13,14 @@ INPUT_CSV_FILENAME = "Z:/DocumentsAndStuff/Documents/Research/20_output.csv"
 # Collapsed filename
 COLLAPSED_CSV_FILENAME = "Z:/DocumentsAndStuff/Documents/Research/collapsed/7_collapsed.csv"
 
+# Collapse file directory
+COLLAPSED_CSV_FILE_DIRECTORY = "Z:/DocumentsAndStuff/Documents/Research/collapsed/"
+
 # Graph information
 GRAPH_INFO_FILE = "Z:/DocumentsAndStuff/Documents/Research/CompletionTime.csv"
 
 # Area of Interest CSV Information
-AOI_INFO = ""
+AOI_INFO = "Z:/Dropbox/CurrentClasses/graduate_project/graphMeasurments.csv"
 
 
 def progress_bar(current, total, elapsed_time, char_to_use="#"):
