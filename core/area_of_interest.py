@@ -2,13 +2,16 @@
 Various functions relating to areas of interests (AOI).
 """
 import pandas as pd
-import params
 import os
+import json
 
 
 class AreaOfInterest:
     def __init__(self):
-        pass
+        # Read in the json file
+        json_file_path = os.path.join(os.getcwd(), "params.json")
+        with open(json_file_path, "r") as file:
+            self._aoi_file = json.load(file)["aoiInfoCsv"]
 
     def execute(self, file_directory):
         """
@@ -104,7 +107,7 @@ class AreaOfInterest:
         :returns A dictionary with taskName as the key, and [aoi_x, aoi_y, aoi_width, aoi_height]
         as values
         """
-        df = pd.read_csv(params.AOI_INFO, index_col=None)
+        df = pd.read_csv(self._aoi_file, index_col=None)
         dict1 = {}
 
         for index, row in df.iterrows():

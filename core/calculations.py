@@ -7,7 +7,6 @@ This python file will call functions to calculate:
 And export it to a file
 """
 import pandas as pd
-import params
 import core.saccades as saccades
 import os
 

@@ -1,33 +1,32 @@
 import pandas as pd
-import params
 import math
 import os
 
 
-def label_graphs(filename):
+def label_graphs(csv_filename, completion_info_file):
     """
-    Read in a collapsed file, then add the corresponding label from params.GRAPH_INFO_FILE
+    Read in a collapsed file, then add the corresponding label from the completion_info_file
 
-    # ARGUMENTS
-    filename    -> The name of the CSV file.
+    @param csv_filename: The name of the CSV file.
+    @param completion_info_file: The path to the Completion Info File.
     """
     overwrite = "y"
     # If output file exists
-    if (os.path.exists(filename)):
+    if (os.path.exists(csv_filename)):
         overwrite = input("File \"{}\" exists. Would you like to overwrite? (Y/N): "
-                          .format(filename).replace("\\", "/"))
+                          .format(csv_filename).replace("\\", "/"))
 
     if overwrite.strip().lower() == "y":
-        df = pd.read_csv(filename, index_col=False)
+        df = pd.read_csv(csv_filename, index_col=False)
 
         # Find the name column
         name = df['Name'][0].split(" ")
         first_name = name[0]
         last_name = name[1]
-        
-        # Read in data from params.GRAPH_INFO_FILE and make a smaller dataframe
+
+        # Read in data from completion_info_file and make a smaller dataframe
         # based on first_name and last_name
-        graph_label_df = pd.read_csv(params.GRAPH_INFO_FILE, index_col=False)
+        graph_label_df = pd.read_csv(completion_info_file, index_col=False)
         name_based_df = pd.DataFrame(columns=graph_label_df.columns)
         for index, row in graph_label_df.iterrows():
             cur_first_name = row['FirstName']
@@ -48,16 +47,16 @@ def label_graphs(filename):
                 graph_row = name_based_df[name_based_df["TaskID"].str.contains(cur_task)]
                 try:
                     graph_temp = graph_row["graph"].values[0]
-                except IndexError as error:
+                except IndexError:
                     # print(error)
                     raise IndexError("Please make sure the participant's First and Last Name is correctly formatted. The format should be \"FirstName LastName\", e.g. \"Jane Lastnameton\"")
             graph_list.append(graph_temp)
-        
+
         # Add the row "Graph" back into the dataframe
         df['Graph'] = graph_list
 
-        df.to_csv(filename, index=False)
-        print("Finished exporting to {}".format(filename).replace("\\", "/"))
+        df.to_csv(csv_filename, index=False)
+        print("Finished exporting to {}".format(csv_filename).replace("\\", "/"))
 
     else:
         print("Exiting...")
