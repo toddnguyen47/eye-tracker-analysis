@@ -17,16 +17,19 @@ with open("params.json", "r") as file:
 
 
 # Start the command line arguments
-s = "Various functions to calculate things relating to eye gaze, such as saccade calculations or \
-    Area of Interest (AOI) calculation. The valid commands are: {}".format(", ".join(valid_commands))
-parser = argparse.ArgumentParser(description=s)
+s = "Various functions to calculate things relating to eye gaze, such as saccade calculations or\n\
+Area of Interest (AOI) calculation. The valid commands are:\n\
+{}".format(", ".join(valid_commands))
+parser = argparse.ArgumentParser(description=s, formatter_class=argparse.RawDescriptionHelpFormatter)
 
 # help_str_2 = ", ".join(valid_commands)
 # help_str = "Various commands that can be done with this program. Correct commands are: {}".format(help_str_2)
 # parser.add_argument("command", metavar="command", help=help_str, choices=valid_commands)
 
 subparsers = parser.add_subparsers(title="Valid commands", description="For additional help with \
-    these commands, type into the terminal: python main.py command_name -h. For example, \
+these commands, type into the terminal:\n\
+    python main.py command_name -h\n\
+For example,\n\
     python main.py {} -h".format(valid_commands[0]), dest="command_name")
 
 # Create parser for the fixation_collapse command

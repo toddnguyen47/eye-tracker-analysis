@@ -1,4 +1,5 @@
 {
   "completionTimeCsv": "C:/DocumentsAndStuff/Documents/Research/CompletionTime.csv",
-  "aoiInfoCsv": "C:/DocumentsAndStuff/Documents/Research/graphMeasurements.csv"
+  "aoiInfoCsv": "C:/DocumentsAndStuff/Documents/Research/GraphAOI.csv",
+  "aoiInfoJson": "C:/DocumentsAndStuff/Documents/Research/GraphAOI.json"
 }
