@@ -74,8 +74,6 @@ if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(0)
 
-print(args)
-
 # Handle Fixation Collapse
 if args.command_name == valid_commands[0]:
     fixations.collapse_to_fixations(args.init_fixation_file, args.collapsed_fixation_file)

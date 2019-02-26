@@ -10,8 +10,8 @@ import pandas as pd
 import core.saccades as saccades
 import os
 
-HEADERS = [ "Current_task", "FixationX", "FixationY", "SaccadeLength", "SaccadeAbsoluteAngleDegrees",
-            "SaccadeRelativeAngleDegrees"]
+HEADERS = ["Current_task", "FixationX", "FixationY", "SaccadeLength", "SaccadeAbsoluteAngleDegrees",
+    "SaccadeRelativeAngleDegrees"]
 
 
 def calculate(csv_file):

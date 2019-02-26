@@ -11,7 +11,11 @@ class AreaOfInterest:
         # Read in the json file
         json_file_path = os.path.join(os.getcwd(), "params.json")
         with open(json_file_path, "r") as file:
-            self._aoi_file = json.load(file)["aoiInfoCsv"]
+            info_filepath = json.load(file)["aoiInfoJson"]
+
+        with open(info_filepath, "r") as file:
+            self._aoi_file = json.load(file)
+
 
     def execute(self, file_directory):
         """
@@ -44,112 +48,96 @@ class AreaOfInterest:
         :param csv_file: The CSV file to look for Areas of Interest.
         """
         csv_df = pd.read_csv(csv_file, index_col=False)
+        aoi_type_list = []
+
         for index, row in csv_df.iterrows():
             cur_task = row["Current_task"]
+            aoi_type = ""
+
             # Ignore all pretask and fill in None values for pretask
             if cur_task.lower() != "pretask".lower():
+                fixation_x = row["FixationX"]
+                fixation_y = row["FixationY"]
+
                 low_or_high = cur_task[1]
-                low_or_high = "high" if low_or_high.upper() == "H" else "low"
+                low_or_high = "High" if low_or_high.upper() == "H" else "Low"
 
                 # Make only the first character uppercase
                 graph_type = list(row["Graph"].lower())
                 graph_type[0] = graph_type[0].upper()
                 graph_type = "".join(graph_type)
 
-    # def add_aoi_to_csv(self, csv_file):
-    #     """
-    #     Read in a csv_file and outputs to that same csv_file 5 added AOI columns: aoi_topleft_x, aoi_topleft_y,
-    #     aoi_width, aoi_height, and is_saccade_within_aoi.
-    #
-    #     NOTE: There is NO warning that the csv_file will be erased! Be careful!
-    #     :params csv_file: The csv_file to read and overwrite.
-    #     """
-    #     aoi_dict = self.build_aoi_dict()
-    #     aoi_topleft_x_list = []
-    #     aoi_topleft_y_list = []
-    #     aoi_width_list = []
-    #     aoi_height_list = []
-    #     within_aoi_list = []
-    #
-    #     df = pd.read_csv(csv_file, index_col=None)
-    #     for index, row in df.iterrows():
-    #         cur_task = row["Current_task"]
-    #         # Ignore all pretask and fill in None values for pretask
-    #         if cur_task.lower() != "pretask".lower():
-    #             low_or_high = cur_task[1]
-    #             low_or_high = "high" if low_or_high.upper() == "H" else "low"
-    #
-    #             # Make only the first character uppercase
-    #             graph_type = list(row["Graph"].lower())
-    #             graph_type[0] = graph_type[0].upper()
-    #             graph_type = "".join(graph_type)
-    #
-    #             task_name = low_or_high + graph_type
-    #             aoi_info = aoi_dict[task_name]
-    #             aoi_x = aoi_info[0]
-    #             aoi_y = aoi_info[1]
-    #             aoi_width = aoi_info[2]
-    #             aoi_height = aoi_info[3]
-    #             saccade_x = row["FixationX"]
-    #             saccade_y = row["FixationY"]
-    #
-    #             is_saccade_within_aoi = self.check_if_saccade_in_aoi(saccade_x=saccade_x, saccade_y=saccade_y, aoi_x=aoi_x,
-    #                 aoi_y=aoi_y, aoi_width=aoi_width, aoi_height=aoi_height)
-    #
-    #             aoi_topleft_x_list.append(aoi_x)
-    #             aoi_topleft_y_list.append(aoi_y)
-    #             aoi_width_list.append(aoi_width)
-    #             aoi_height_list.append(aoi_height)
-    #             within_aoi_list.append(is_saccade_within_aoi)
-    #
-    #         # Fill out None values for pretask
-    #         else:
-    #             aoi_topleft_x_list.append(None)
-    #             aoi_topleft_y_list.append(None)
-    #             aoi_width_list.append(None)
-    #             aoi_height_list.append(None)
-    #             within_aoi_list.append(None)
-    #
-    #     # Add the rows back into the dataframes
-    #     df["AOITopLeftX"] = aoi_topleft_x_list
-    #     df["AOITopLeftY"] = aoi_topleft_y_list
-    #     df["AOIWidth"] = aoi_width_list
-    #     df["AOIHeight"] = aoi_height_list
-    #     df["SaccadeWithinAOI"] = within_aoi_list
-    #
-    #     df.to_csv(csv_file, index=None)
-    #     print("Finished exporting to {}".format(csv_file.replace("\\", "/")))
-    #
-    #
-    # def build_aoi_dict(self):
-    #     """
-    #     Build an area of interest dictionary based on the screenshots.
-    #
-    #     :returns A dictionary with taskName as the key, and [aoi_x, aoi_y, aoi_width, aoi_height]
-    #     as values
-    #     """
-    #     df = pd.read_csv(self._aoi_file, index_col=None)
-    #     dict1 = {}
-    #
-    #     for index, row in df.iterrows():
-    #         task_name = row["TaskName"]
-    #         aoi_top_left = row["TopLeftCoordinates"].split(",")
-    #         aoi_x = int(aoi_top_left[0])
-    #         aoi_y = int(aoi_top_left[1])
-    #         aoi_width = row["Width"]
-    #         aoi_height = row["Height"]
-    #         dict1[task_name] = [aoi_x, aoi_y, aoi_width, aoi_height]
-    #
-    #     return dict1
+                graph_type = "".join((low_or_high, graph_type))
+
+                graph_type_dict = self._aoi_file[graph_type]
+                # For each AOI in the graph type dict
+                for aoi_type_temp in graph_type_dict.keys():
+                    coords_list = graph_type_dict[aoi_type_temp]
+                    top_left = [int(x) for x in coords_list[0].split(",")]
+                    bot_left = [int(x) for x in coords_list[1].split(",")]
+                    top_right = [int(x) for x in coords_list[2].split(",")]
+                    bot_right = [int(x) for x in coords_list[3].split(",")]
+                    if self.check_if_saccade_in_aoi_coords(fixation_x=fixation_x, fixation_y=fixation_y,
+                        aoi_topleft=top_left, aoi_botleft=bot_left, aoi_topright=top_right, aoi_botright=bot_right):
+                        # If the saccade is in the AOI, put the AOI type into the list
+                        aoi_type = "".join((aoi_type_temp, "_AOI"))
+                        break
+            aoi_type_list.append(aoi_type)
+
+        csv_df["AOI"] = aoi_type_list
+        temp_list = csv_file.split("\\")
+        csv_filename = temp_list[-1]
+        parent_folder = temp_list[-2]
+
+        path_before = csv_file[:-(len(csv_filename) + len("/") + len(parent_folder) + len("/"))]
+        csv_path_collapsed = os.path.join(path_before, "CollapsedWithAOI")
+        # If directory doesn't exist
+        if not os.path.isdir(csv_path_collapsed):
+            os.mkdir(csv_path_collapsed)
+
+        csv_file_output = os.path.join(csv_path_collapsed, csv_filename)
+        csv_df.to_csv(csv_file_output, index=None)
+        print("Finished exporting to {}".format(csv_file_output.replace("\\", "/")))
 
 
-    def check_if_saccade_in_aoi(self, saccade_x, saccade_y, aoi_x, aoi_y,
+    def check_if_saccade_in_aoi_coords(self, fixation_x, fixation_y,
+        aoi_topleft, aoi_botleft, aoi_topright, aoi_botright):
+        """
+        Check if the saccade is in the Area of Interest using the top left, bot left, top right,
+        and bot right coordinates.
+
+        :param fixation_x: Saccade's x-coordinate
+        :param fixation_y: Saccade's y-coordinate
+        :param aoi_topleft: Area of Interest's top left coordinates
+        :param aoi_botleft: Area of Interest's bottom left coordinates.
+        :param aoi_topright: Area of Interest's top right coordinates.
+        :param aoi_botright: Area of Interest's bot right coordinates.
+        """
+        left_x = aoi_topleft[0]
+        right_x = aoi_botright[0]
+        top_y = aoi_topleft[1]
+        bot_y = aoi_botright[1]
+
+        # Check if the saccade x coordinates are within the aoi
+        fixation_within_x = left_x <= fixation_x <= right_x
+        if not fixation_within_x:
+            return False
+
+        # Check if the saccade y coordinates are within the aoi
+        fixation_within_y = top_y <= fixation_y <= bot_y
+        if not fixation_within_y:
+            return False
+
+        return fixation_within_x and fixation_within_y
+
+
+    def check_if_saccade_in_aoi(self, fixation_x, fixation_y, aoi_x, aoi_y,
                                 aoi_width, aoi_height):
         """
-        Check if the saccade is in the Area of Interest.
+        Check if the saccade is in the Area of Interest using width and height.
 
-        :param saccade_x: Saccade's x-coordinate
-        :param saccade_y: Saccade's y-coordinate
+        :param fixation_x: Saccade's x-coordinate
+        :param fixation_y: Saccade's y-coordinate
         :param aoi_x: Area of Interest's x-coordinate
         :param aoi_y: Area of Interest's y-coordinate
         :param aoi_width: Area of Interest's width
@@ -166,13 +154,13 @@ class AreaOfInterest:
         bot_y = aoi_y + aoi_height
 
         # Check if the saccade x coordinates are within the aoi
-        saccade_within_x = left_x <= saccade_x <= right_x
-        if not saccade_within_x:
+        fixation_within_x = left_x <= fixation_x <= right_x
+        if not fixation_within_x:
             return False
 
         # Check if the saccade y coordinates are within the aoi
-        saccade_within_y = top_y <= saccade_y <= bot_y
-        if not saccade_within_y:
+        fixation_within_y = top_y <= fixation_y <= bot_y
+        if not fixation_within_y:
             return False
 
-        return saccade_within_x and saccade_within_y
+        return fixation_within_x and fixation_within_y
