@@ -88,7 +88,7 @@ elif args.command_name == valid_commands[2]:
 
 # Handle statistics calculation
 elif args.command_name == valid_commands[3]:
-    columns_to_obtain = ["Saccade_length", "Saccade_absolute_angle", "Saccade_relative_angle"]
+    columns_to_obtain = ["FixationDuration", "Saccade_length", "Saccade_absolute_angle", "Saccade_relative_angle"]
     get_stats.get_stats(args.collapsed_fixation_file, args.output_file, columns_to_obtain)
 
 # Handle AOI calculation

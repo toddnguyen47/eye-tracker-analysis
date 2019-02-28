@@ -3,18 +3,13 @@ Various functions relating to areas of interests (AOI).
 """
 import pandas as pd
 import os
-import json
+import core.utils as utils
 
 
 class AreaOfInterest:
     def __init__(self):
         # Read in the json file
-        json_file_path = os.path.join(os.getcwd(), "params.json")
-        with open(json_file_path, "r") as file:
-            info_filepath = json.load(file)["aoiInfoJson"]
-
-        with open(info_filepath, "r") as file:
-            self._aoi_file = json.load(file)
+        self._aoi_file = utils.load_in_aoi_json()
 
 
     def execute(self, file_directory):
