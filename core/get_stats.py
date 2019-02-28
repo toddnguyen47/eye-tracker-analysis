@@ -102,7 +102,11 @@ def get_num_fixations_in_aoi(pd_dataframe, aoi_json_data):
             cur_task_key = "".join((high_or_low, cur_task_graph))
             num_fixations_1 = num_fixation_dict[cur_task_key][cur_aoi]["NumberOfFixations"] + 1
             fix_duration_1 = num_fixation_dict[cur_task_key][cur_aoi]["FixationDurationSum"] + cur_task_fixation_duration
-            mean_fix_duration_1 = fix_duration_1 / num_fixations_1
+            # To prevent dividing by zero
+            if num_fixations_1 == 0:
+                mean_fix_duration_1 = 0
+            else:
+                mean_fix_duration_1 = fix_duration_1 / num_fixations_1
 
             num_fixation_dict[cur_task_key][cur_aoi]["NumberOfFixations"] = round(num_fixations_1, 4)
             num_fixation_dict[cur_task_key][cur_aoi]["FixationDurationSum"] = round(fix_duration_1, 4)

@@ -1,0 +1,194 @@
+{
+  "BasicStats": {
+    "FixationDuration": {
+      "Sum": 549611,
+      "Average": 191.56883931683512,
+      "StandardDeviation": 133.6132291279193
+    },
+    "Saccade_length": {
+      "Sum": 739024.0388412741,
+      "Average": 257.58941751177207,
+      "StandardDeviation": 293.7479785976093
+    },
+    "Saccade_absolute_angle": {
+      "Sum": 256402.140930861,
+      "Average": 89.36986438858871,
+      "StandardDeviation": 61.15044275204401
+    },
+    "Saccade_relative_angle": {
+      "Sum": 226319.488132017,
+      "Average": 78.88445037714081,
+      "StandardDeviation": 57.642156976961076
+    }
+  },
+  "AOI": {
+    "HighBar": {
+      "Question_AOI": {
+        "NumberOfFixations": 4,
+        "FixationDurationSum": 610,
+        "FixationDurationMean": 152.5
+      },
+      "Title_AOI": {
+        "NumberOfFixations": 7,
+        "FixationDurationSum": 1028,
+        "FixationDurationMean": 146.8571
+      },
+      "LabelBox_AOI": {
+        "NumberOfFixations": 60,
+        "FixationDurationSum": 11992,
+        "FixationDurationMean": 199.8667
+      },
+      "OptionBox_AOI": {
+        "NumberOfFixations": 33,
+        "FixationDurationSum": 7308,
+        "FixationDurationMean": 221.4545
+      },
+      "Answers_AOI": {
+        "NumberOfFixations": 50,
+        "FixationDurationSum": 11544,
+        "FixationDurationMean": 230.88
+      },
+      "XAxis_AOI": {
+        "NumberOfFixations": 18,
+        "FixationDurationSum": 3629,
+        "FixationDurationMean": 201.6111
+      },
+      "YAxis_AOI": {
+        "NumberOfFixations": 3,
+        "FixationDurationSum": 751,
+        "FixationDurationMean": 250.3333
+      },
+      "Graph_AOI": {
+        "NumberOfFixations": 295,
+        "FixationDurationSum": 51842,
+        "FixationDurationMean": 175.7356
+      }
+    },
+    "LowBar": {
+      "Question_AOI": {
+        "NumberOfFixations": 11,
+        "FixationDurationSum": 1838,
+        "FixationDurationMean": 167.0909
+      },
+      "Title_AOI": {
+        "NumberOfFixations": 7,
+        "FixationDurationSum": 1097,
+        "FixationDurationMean": 156.7143
+      },
+      "LabelBox_AOI": {
+        "NumberOfFixations": 1,
+        "FixationDurationSum": 225,
+        "FixationDurationMean": 225.0
+      },
+      "OptionBox_AOI": {
+        "NumberOfFixations": 21,
+        "FixationDurationSum": 4801,
+        "FixationDurationMean": 228.619
+      },
+      "Answers_AOI": {
+        "NumberOfFixations": 49,
+        "FixationDurationSum": 8304,
+        "FixationDurationMean": 169.4694
+      },
+      "XAxis_AOI": {
+        "NumberOfFixations": 11,
+        "FixationDurationSum": 2214,
+        "FixationDurationMean": 201.2727
+      },
+      "YAxis_AOI": {
+        "NumberOfFixations": 3,
+        "FixationDurationSum": 425,
+        "FixationDurationMean": 141.6667
+      },
+      "Graph_AOI": {
+        "NumberOfFixations": 166,
+        "FixationDurationSum": 29989,
+        "FixationDurationMean": 180.6566
+      }
+    },
+    "HighLine": {
+      "Question_AOI": {
+        "NumberOfFixations": 3,
+        "FixationDurationSum": 494,
+        "FixationDurationMean": 164.6667
+      },
+      "Title_AOI": {
+        "NumberOfFixations": 2,
+        "FixationDurationSum": 309,
+        "FixationDurationMean": 154.5
+      },
+      "LabelBox_AOI": {
+        "NumberOfFixations": 11,
+        "FixationDurationSum": 1790,
+        "FixationDurationMean": 162.7273
+      },
+      "OptionBox_AOI": {
+        "NumberOfFixations": 72,
+        "FixationDurationSum": 14155,
+        "FixationDurationMean": 196.5972
+      },
+      "Answers_AOI": {
+        "NumberOfFixations": 44,
+        "FixationDurationSum": 9222,
+        "FixationDurationMean": 209.5909
+      },
+      "XAxis_AOI": {
+        "NumberOfFixations": 7,
+        "FixationDurationSum": 1313,
+        "FixationDurationMean": 187.5714
+      },
+      "YAxis_AOI": {
+        "NumberOfFixations": 13,
+        "FixationDurationSum": 2858,
+        "FixationDurationMean": 219.8462
+      },
+      "Graph_AOI": {
+        "NumberOfFixations": 177,
+        "FixationDurationSum": 34024,
+        "FixationDurationMean": 192.226
+      }
+    },
+    "LowLine": {
+      "Question_AOI": {
+        "NumberOfFixations": 12,
+        "FixationDurationSum": 3113,
+        "FixationDurationMean": 259.4167
+      },
+      "Title_AOI": {
+        "NumberOfFixations": 5,
+        "FixationDurationSum": 775,
+        "FixationDurationMean": 155.0
+      },
+      "LabelBox_AOI": {
+        "NumberOfFixations": 3,
+        "FixationDurationSum": 446,
+        "FixationDurationMean": 148.6667
+      },
+      "OptionBox_AOI": {
+        "NumberOfFixations": 36,
+        "FixationDurationSum": 7206,
+        "FixationDurationMean": 200.1667
+      },
+      "Answers_AOI": {
+        "NumberOfFixations": 38,
+        "FixationDurationSum": 7247,
+        "FixationDurationMean": 190.7105
+      },
+      "XAxis_AOI": {
+        "NumberOfFixations": 0,
+        "FixationDurationSum": 0,
+        "FixationDurationMean": 0
+      },
+      "YAxis_AOI": {
+        "NumberOfFixations": 10,
+        "FixationDurationSum": 2305,
+        "FixationDurationMean": 230.5
+      },
+      "Graph_AOI": {
+        "NumberOfFixations": 168,
+        "FixationDurationSum": 33312,
+        "FixationDurationMean": 198.2857
+      }
+    }
+  }
+}
