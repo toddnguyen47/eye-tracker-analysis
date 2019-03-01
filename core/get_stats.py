@@ -67,49 +67,84 @@ def get_num_fixations_in_aoi(pd_dataframe, aoi_json_data):
     aoi_col = pd_dataframe["AOI"]
     fixation_duration = pd_dataframe["FixationDuration"]
 
-    graph_type_list = ["HighBar", "LowBar", "HighLine", "LowLine"]
     num_fixation_dict = {}
-    for graph_type in graph_type_list:
-        temp_data = aoi_json_data[graph_type]
-        # Initialize the return dictionary with all number of fixations being 0
-        # Reference: https://stackoverflow.com/a/2244026/6323360
-        per_aoi_dict = {}
-        for key in temp_data.keys():
-            key_2 = "_".join((key, "AOI"))
-            temp_dict = {}
-            temp_dict["NumberOfFixations"] = 0
-            temp_dict["FixationDurationSum"] = 0
-            temp_dict["FixationDurationMean"] = 0
-            per_aoi_dict[key_2] = temp_dict
-        num_fixation_dict[graph_type] = per_aoi_dict
+    temp_data = aoi_json_data["HighBar"]
+    temp_data["NoAOI"] = None
+    # Initialize the return dictionary with all number of fixations being 0
+    # Reference: https://stackoverflow.com/a/2244026/6323360
+    for key in temp_data.keys():
+        key_2 = "_".join((key, "AOI"))
+        temp_dict = {}
+        temp_dict["NumberOfFixations"] = 0
+        temp_dict["FixationDurationSum"] = 0
+        temp_dict["FixationDurationMean"] = 0
+        temp_dict["LongestFixationInAOI"] = 0
+        temp_dict["ProportionOfTotalNumberOfFixations"] = 0
+        temp_dict["ProportionOfTotalNumberOfFixationDuration"] = 0
+        num_fixation_dict[key_2] = temp_dict
+
+    total_num_fixations = 0
+    total_fixation_duration = 0
 
     for i in range(len(task_col)):
         cur_task = task_col[i]
         cur_aoi = str(aoi_col[i])
-        # Ignore all pretask and ignore all AOI that are empty
-        if cur_task.lower() != "pretask".lower() and cur_aoi.lower() != "nan".lower():
+        # Ignore all pretask
+        if cur_task.lower() != "pretask".lower():
+            total_num_fixations += 1
+            # Ignore all fixations that are not in AOI
+            if cur_aoi.lower() == "nan".lower():
+                cur_aoi = "NoAOI_AOI"
+
             cur_task_graph = list(graph_col[i].lower())
             # Lowercase cur task graph, then uppercase only the first character
             cur_task_graph[0] = cur_task_graph[0].upper()
             cur_task_graph = "".join(cur_task_graph)
 
+            # h_or_l = cur_task[1]
+            # high_or_low = "High" if h_or_l.lower() == "h".lower() else "Low"
+            # cur_task_key = "".join((high_or_low, cur_task_graph))
+
             # Current Task Fixation Duration
             cur_task_fixation_duration = fixation_duration[i].item()
+            total_fixation_duration += cur_task_fixation_duration
 
-            h_or_l = cur_task[1]
-            high_or_low = "High" if h_or_l.lower() == "h".lower() else "Low"
-
-            cur_task_key = "".join((high_or_low, cur_task_graph))
-            num_fixations_1 = num_fixation_dict[cur_task_key][cur_aoi]["NumberOfFixations"] + 1
-            fix_duration_1 = num_fixation_dict[cur_task_key][cur_aoi]["FixationDurationSum"] + cur_task_fixation_duration
+            num_fixations_1 = num_fixation_dict[cur_aoi]["NumberOfFixations"] + 1
+            fix_duration_1 = num_fixation_dict[cur_aoi]["FixationDurationSum"] + cur_task_fixation_duration
             # To prevent dividing by zero
             if num_fixations_1 == 0:
                 mean_fix_duration_1 = 0
             else:
                 mean_fix_duration_1 = fix_duration_1 / num_fixations_1
 
-            num_fixation_dict[cur_task_key][cur_aoi]["NumberOfFixations"] = round(num_fixations_1, 4)
-            num_fixation_dict[cur_task_key][cur_aoi]["FixationDurationSum"] = round(fix_duration_1, 4)
-            num_fixation_dict[cur_task_key][cur_aoi]["FixationDurationMean"] = round(mean_fix_duration_1, 4)
+            num_fixation_dict[cur_aoi]["NumberOfFixations"] = num_fixations_1
+            num_fixation_dict[cur_aoi]["FixationDurationSum"] = fix_duration_1
+            num_fixation_dict[cur_aoi]["FixationDurationMean"] = round(mean_fix_duration_1, 4)
+
+            # Get the longest fixation in AOI
+            if num_fixation_dict[cur_aoi]["LongestFixationInAOI"] < cur_task_fixation_duration:
+                num_fixation_dict[cur_aoi]["LongestFixationInAOI"] = cur_task_fixation_duration
+
+    # Obtain Post-Stats
+    print("TOTAL: {}".format(total_fixation_duration))
+    for key in num_fixation_dict.keys():
+        # Get the proportion of total number of fixations in AOI
+        proportionKey = "ProportionOfTotalNumberOfFixations"
+        if total_num_fixations == 0:
+            num_fixation_dict[key][proportionKey] = 0
+        else:
+            proportionValue = num_fixation_dict[key]["NumberOfFixations"] / total_num_fixations
+            proportionValue = round(proportionValue, 6)
+            num_fixation_dict[key][proportionKey] = proportionValue
+
+        # Get the proportion of total number of fixation duration
+        proportionKey = "ProportionOfTotalNumberOfFixationDuration"
+        if total_fixation_duration == 0:
+            num_fixation_dict[key][proportionKey] = 0
+        else:
+            proportionValue = num_fixation_dict[key]["FixationDurationSum"] / total_fixation_duration
+            proportionValue = round(proportionValue, 6)
+            num_fixation_dict[key][proportionKey] = proportionValue
+
 
     return num_fixation_dict
