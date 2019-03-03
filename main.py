@@ -2,7 +2,7 @@
 import core.fixations as fixations
 import core.calculations as calculations
 import core.label_graphs as label_graphs
-import core.get_stats as get_stats
+from core.get_stats import GetStats
 from core.area_of_interest import AreaOfInterest
 import argparse
 import sys
@@ -55,7 +55,7 @@ parser_saccade_calc.add_argument("collapsed_fixation_file", help="The path to th
 # Create parser for the statistics calculation command
 parser_stats_calc = subparsers.add_parser(valid_commands[3], help="Calculate statistics, including \
     mean, median, and mode of WIP: TODO")
-parser_stats_calc.add_argument("collapsed_fixation_file", help="The path to the collapsed fixation file.",
+parser_stats_calc.add_argument("file_directory", help="The path to the collapsed fixation file directory.",
     metavar="collapsed_file")
 parser_stats_calc.add_argument("output_file", help="CSV File to output the stats to.")
 
@@ -88,8 +88,7 @@ elif args.command_name == valid_commands[2]:
 
 # Handle statistics calculation
 elif args.command_name == valid_commands[3]:
-    columns_to_obtain = ["FixationDuration", "Saccade_length", "Saccade_absolute_angle", "Saccade_relative_angle"]
-    get_stats.get_stats(args.collapsed_fixation_file, args.output_file, columns_to_obtain)
+    GetStats().get_stats_all_users(args.file_directory, args.output_file)
 
 # Handle AOI calculation
 elif args.command_name == valid_commands[4]:
