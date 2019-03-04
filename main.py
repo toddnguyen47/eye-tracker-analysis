@@ -58,6 +58,8 @@ parser_stats_calc = subparsers.add_parser(valid_commands[3], help="Calculate sta
 parser_stats_calc.add_argument("file_directory", help="The path to the collapsed fixation file directory.",
     metavar="collapsed_file")
 parser_stats_calc.add_argument("output_file", help="CSV File to output the stats to.")
+parser_stats_calc.add_argument("user_or_task", help="Denote whether you want to calculate the statistics \
+    of all users, or per task for one user.", choices=["all_users", "per_task"])
 
 # Create parser for the AOI calculations command
 parser_aoi_calc = subparsers.add_parser(valid_commands[4], help="Calculate whether the fixations \
@@ -88,7 +90,10 @@ elif args.command_name == valid_commands[2]:
 
 # Handle statistics calculation
 elif args.command_name == valid_commands[3]:
-    GetStats().get_stats_all_users(args.file_directory, args.output_file)
+    get_stats_obj = GetStats()
+    # Handle all users stats calculation
+    if args.user_or_task == "all_users":
+        get_stats_obj.get_stats_all_users(args.file_directory, args.output_file)
 
 # Handle AOI calculation
 elif args.command_name == valid_commands[4]:
