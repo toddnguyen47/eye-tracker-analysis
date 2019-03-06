@@ -17,18 +17,17 @@ class GetStats:
         :param outfile: The outfile to export to a CSV file
         """
         all_stats_list = []
-        for (dirpath, dirnames, filenames) in os.walk(file_dir):
-            for file in filenames:
-                if file.endswith("csv"):
-                    print("Calculating stats for file {}...".format(file))
-                    filepath = os.path.join(dirpath, file)
-                    file_stats = self.get_stats_per_file(filepath)
+        for file in os.listdir(file_dir):
+            if file.endswith("csv"):
+                print("Calculating stats for file {}...".format(file))
+                filepath = os.path.join(file_dir, file)
+                file_stats = self.get_stats_per_file(filepath)
 
-                    # Should never happen
-                    if len(self._header_row_hashset) != len(file_stats):
-                        raise ValueError("Header row set and file_stats list should have the same length")
+                # Should never happen
+                if len(self._header_row_hashset) != len(file_stats):
+                    raise ValueError("Header row set and file_stats list should have the same length")
 
-                    all_stats_list.append(file_stats)
+                all_stats_list.append(file_stats)
 
         # Output
         with open(outfile, "w") as file:
@@ -102,7 +101,6 @@ class GetStats:
         dict1 = {}
 
         task_col = pd_dataframe["Current_task"]
-        graph_col = pd_dataframe["Graph"]
         aoi_col = pd_dataframe["AOI"]
         fixation_duration = pd_dataframe["FixationDuration"]
 
@@ -134,10 +132,10 @@ class GetStats:
                 if cur_aoi.lower() == "nan".lower():
                     cur_aoi = "NoAOI_AOI"
 
-                cur_task_graph = list(graph_col[i].lower())
-                # Lowercase cur task graph, then uppercase only the first character
-                cur_task_graph[0] = cur_task_graph[0].upper()
-                cur_task_graph = "".join(cur_task_graph)
+                # cur_task_graph = list(graph_col[i].lower())
+                # # Lowercase cur task graph, then uppercase only the first character
+                # cur_task_graph[0] = cur_task_graph[0].upper()
+                # cur_task_graph = "".join(cur_task_graph)
 
                 # h_or_l = cur_task[1]
                 # high_or_low = "High" if h_or_l.lower() == "h".lower() else "Low"
@@ -168,22 +166,22 @@ class GetStats:
         # Obtain Post-Stats
         for key in aoi_list:
             # Get the proportion of total number of fixations in AOI
-            proportionKey = "_ProportionOfTotalFixations"
+            proportion_key = "_ProportionOfTotalFixations"
             if total_num_fixations == 0:
-                dict1[key + proportionKey] = 0
+                dict1[key + proportion_key] = 0
             else:
-                proportionValue = dict1[key + "_NumberOfFixations"] / total_num_fixations
-                proportionValue = round(proportionValue, 6)
-                dict1[key + proportionKey] = proportionValue
+                proportion_value = dict1[key + "_NumberOfFixations"] / total_num_fixations
+                proportion_value = round(proportion_value, 6)
+                dict1[key + proportion_key] = proportion_value
 
             # Get the proportion of total number of fixation duration
-            proportionKey = "_ProportionOfTotalFixationDuration"
+            proportion_key = "_ProportionOfTotalFixationDuration"
             if total_fixation_duration == 0:
-                dict1[key + proportionKey] = 0
+                dict1[key + proportion_key] = 0
             else:
-                proportionValue = dict1[key + "_FixationDurationSum"] / total_fixation_duration
-                proportionValue = round(proportionValue, 6)
-                dict1[key + proportionKey] = proportionValue
+                proportion_value = dict1[key + "_FixationDurationSum"] / total_fixation_duration
+                proportion_value = round(proportion_value, 6)
+                dict1[key + proportion_key] = proportion_value
 
         # Add keys to list, then add values to return list
         return_list = []
@@ -192,3 +190,174 @@ class GetStats:
             return_list.append(str(dict1[key]))
 
         return return_list
+
+
+    def get_stats_per_task(self, full_path_to_csv_file, output_dir):
+        """
+        Get the stats per task.
+        :param full_path_to_csv_file: The path where the input files are.
+        :param output_dir: Directory of the outputs
+        :return:
+        """
+        for file1 in os.listdir(full_path_to_csv_file):
+            if file1.endswith("csv"):
+                filepath = os.path.join(full_path_to_csv_file, file1)
+                self.calc_per_task_for_oneuser(filepath, output_dir)
+
+
+    def calc_per_task_for_oneuser(self, file_path, output_dir):
+        """
+        Calculate the AOI numbers per task for one user.
+        :param file_path: Filepath to the CSV file
+        :param output_dir: Output directory.
+        :return:
+        """
+        with open(file_path, "r") as file:
+            df = pd.read_csv(file, index_col=False)
+
+        task_col = df["Current_task"]
+        max_len = len(task_col)
+        file_name = file_path.replace("\\", "/").split("/")[-1]
+        participant_id = ""
+        for char in file_name:
+            if char.isdigit():
+                participant_id = "".join((participant_id, char))
+
+        stats_to_obtain_list = ["NumberOfFixations", "TotalFixationDuration", "FixationDurationAverage",
+                                "NumberOfSaccades", "TotalSaccadeLength", "SaccadeLengthAverage",
+                                "TotalSaccadeAbsAngle", "SaccadeAbsAngleAverage",
+                                "TotalSaccadeRelAngle", "SaccadeRelAngleAverage",
+                                "LongestFixationDurationInAOI", "ProportionOfTotalFixations",
+                                "ProportionOfTotalFixationDuration"]
+        col_headers_list = ["Participant", "Task", "AOI"] + stats_to_obtain_list
+        stats_output_dict = {}
+
+        # JSON Data containing information about all the possible AOIs
+        aoi_json_data = utils.load_in_aoi_json()
+        task_set = set()
+        dict_of_sums = {}
+
+        for i in range(max_len):
+            cur_task = task_col[i]
+            # Skip all pretasks
+            if cur_task.lower() != "pretask":
+                task_set.add(cur_task)
+
+                cur_aoi = str(df["AOI"][i])
+                if cur_aoi.lower() == "nan".lower():
+                    cur_aoi = "NoAOI_AOI"
+
+                # If cur_task is not in stats_output_dict yet, initialize it
+                if cur_task not in stats_output_dict:
+                    # First, initialize the dictionary. Each task has a dictionary of various AOIs. Each AOI
+                    # is a dictionary of all the stats
+                    stats_output_dict[cur_task] = {}
+                    temp_data = aoi_json_data["HighBar"]
+                    temp_data["NoAOI"] = None
+                    for key in temp_data.keys():
+                        key2 = "_".join((key, "AOI"))
+                        # Initialize this specific AOI stored in key2
+                        if key2 not in stats_output_dict[cur_task]:
+                            stats_output_dict[cur_task][key2] = {}
+                        # Initialize all the stats as well
+                        for stats in stats_to_obtain_list:
+                            stats_output_dict[cur_task][key2][stats] = 0
+
+                # Store the current dictionary in this temporary variable to avoid verbose typing
+                temp_dict = stats_output_dict[cur_task][cur_aoi]
+
+                # Get the total fixation duration
+                duration1 = df["FixationDuration"][i].item()
+                temp_dict["TotalFixationDuration"] += duration1
+                # Get the longest fixation duration in this particular AOI
+                if duration1 > temp_dict["LongestFixationDurationInAOI"]:
+                    temp_dict["LongestFixationDurationInAOI"] = duration1
+
+                # Increment the number of fixations in this AOI
+                temp_dict["NumberOfFixations"] += 1
+
+                # Get the total fixation duration for proportion calculations later
+                if cur_task not in dict_of_sums:
+                    dict_of_sums[cur_task] = {"TotalFixation": 1,
+                        "TotalFixationDuration": duration1}
+                else:
+                    dict_of_sums[cur_task]["TotalFixation"] += 1
+                    dict_of_sums[cur_task]["TotalFixationDuration"] += duration1
+
+                # Get the total saccade length
+                temp_dict["TotalSaccadeLength"] += df["Saccade_length"][i].item()
+                # Inrement the number of saccades in this AOI
+                temp_dict["NumberOfSaccades"] += 1
+
+                # Get saccade absolute angle
+                temp_dict["TotalSaccadeAbsAngle"] += abs(df["Saccade_absolute_angle"][i].item())
+                # Get saccade relative angle
+                temp_dict["TotalSaccadeRelAngle"] += abs(df["Saccade_relative_angle"][i].item())
+
+        # Post Stats calculation
+        for task in task_set:
+            for aoi in stats_output_dict[task].keys():
+                temp_dict = stats_output_dict[task][aoi]
+                # Get the fixation duration average
+                if temp_dict["NumberOfFixations"] == 0:
+                    temp_dict["FixationDurationAverage"] = 0
+                else:
+                    temp_dict["FixationDurationAverage"] = temp_dict["TotalFixationDuration"] / temp_dict["NumberOfFixations"]
+
+                # Get the saccade length average
+                num_saccades = temp_dict["NumberOfSaccades"]
+                if num_saccades == 0:
+                    temp_dict["SaccadeLengthAverage"] = 0
+                    temp_dict["SaccadeAbsAngleAverage"] = 0
+                    temp_dict["SaccadeRelAngleAverage"] = 0
+                else:
+                    temp_dict["SaccadeLengthAverage"] = temp_dict["TotalSaccadeLength"] / num_saccades
+                    temp_dict["SaccadeAbsAngleAverage"] = temp_dict["TotalSaccadeAbsAngle"] / num_saccades
+                    temp_dict["SaccadeRelAngleAverage"] = temp_dict["TotalSaccadeRelAngle"] / num_saccades
+
+                # Get Fixation Proportion
+                if dict_of_sums[task]["TotalFixation"] == 0:
+                    temp_dict["ProportionOfTotalFixations"] = 0
+                else:
+                    n1 = temp_dict["NumberOfFixations"] / dict_of_sums[task]["TotalFixation"]
+                    temp_dict["ProportionOfTotalFixations"] = n1
+
+                # Get Fixation Duration Proportion
+                if dict_of_sums[task]["TotalFixationDuration"] == 0:
+                    temp_dict["ProportionOfTotalFixationDuration"] = 0
+                else:
+                    n1 = temp_dict["TotalFixationDuration"] / dict_of_sums[task]["TotalFixationDuration"]
+                    temp_dict["ProportionOfTotalFixationDuration"] = n1
+
+        self.output_per_task_stats(col_headers_list, stats_output_dict, participant_id, output_dir)
+
+
+    def output_per_task_stats(self, col_headers, dict_input, participant_id, output_dir):
+        """
+        Output the dictionary into a CSV file.
+        :param col_headers: The column headers
+        :param dict_input: The dictionary input of the stats
+        :param participant_id: The number/ID of the participant.
+        :param output_dir: The directory of the output
+        :return:
+        """
+        file_name = "{}_stats.csv".format(participant_id)
+        file_path = os.path.join(output_dir, file_name)
+        with open(file_path, "w") as file:
+            file.write(",".join(col_headers))
+            file.write("\n")
+
+            for task_type in dict_input.keys():
+                for aoi in dict_input[task_type].keys():
+                    row_list = [participant_id, task_type, aoi]
+                    for stats in dict_input[task_type][aoi].keys():
+                        row_list.append(str(dict_input[task_type][aoi][stats]))
+
+                    # should never happen
+                    if len(row_list) != len(col_headers):
+                        raise ValueError("The number of columns in this row does not match the number of column headers.")
+
+                    file.write(",".join(row_list))
+                    file.write("\n")
+
+        print("Finished writing to {}".format(file_path.replace("\\", "/")))

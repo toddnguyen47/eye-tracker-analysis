@@ -55,11 +55,12 @@ parser_saccade_calc.add_argument("collapsed_fixation_file", help="The path to th
 # Create parser for the statistics calculation command
 parser_stats_calc = subparsers.add_parser(valid_commands[3], help="Calculate statistics, including \
     mean, median, and mode of WIP: TODO")
-parser_stats_calc.add_argument("file_directory", help="The path to the collapsed fixation file directory.",
-    metavar="collapsed_file")
-parser_stats_calc.add_argument("output_file", help="CSV File to output the stats to.")
 parser_stats_calc.add_argument("user_or_task", help="Denote whether you want to calculate the statistics \
     of all users, or per task for one user.", choices=["all_users", "per_task"])
+parser_stats_calc.add_argument("file_directory", help="The path to the collapsed fixation file directory.")
+parser_stats_calc.add_argument("output", help="When calculating for all users, this option is the \
+    CSV File to output the stats to. When calculating for per task for one user, this is the file directory \
+    that the outputs will be saved in.")
 
 # Create parser for the AOI calculations command
 parser_aoi_calc = subparsers.add_parser(valid_commands[4], help="Calculate whether the fixations \
@@ -93,7 +94,10 @@ elif args.command_name == valid_commands[3]:
     get_stats_obj = GetStats()
     # Handle all users stats calculation
     if args.user_or_task == "all_users":
-        get_stats_obj.get_stats_all_users(args.file_directory, args.output_file)
+        get_stats_obj.get_stats_all_users(args.file_directory, args.output)
+    # Handle per task per user calculation
+    elif args.user_or_task == "per_task":
+        get_stats_obj.get_stats_per_task(args.file_directory, args.output)
 
 # Handle AOI calculation
 elif args.command_name == valid_commands[4]:
