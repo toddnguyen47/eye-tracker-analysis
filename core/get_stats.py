@@ -368,9 +368,15 @@ class GetStats:
                     aoi_num_fix = temp_dict_1[aoi + "_NumberOfFixations"]
                     temp_dict_1[aoi + "_ProportionOfTotalFixations"] = aoi_num_fix / num_fixations
 
+                    # Get the mean
+                    if aoi_num_fix != 0:
+                        temp_dict_1[aoi + "_FixationDurationMean"] = temp_dict_1[aoi + "_FixationDurationSum"] / aoi_num_fix
+
                     # Get proportion of total fixation duration
                     aoi_fix_duration = temp_dict_1[aoi + "_FixationDurationSum"]
-                    temp_dict_1[aoi + "_ProportionOFTotalFixationDuration"] = aoi_fix_duration / temp_dict_1["FixationDuration_Sum"]
+                    total_fix_dur_sum = temp_dict_1["FixationDuration_Sum"]
+                    if total_fix_dur_sum != 0:
+                        temp_dict_1[aoi + "_ProportionOFTotalFixationDuration"] = aoi_fix_duration / total_fix_dur_sum
 
         return output_dict
 
