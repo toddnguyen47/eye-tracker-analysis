@@ -54,13 +54,12 @@ parser_saccade_calc.add_argument("collapsed_fixation_file", help="The path to th
 
 # Create parser for the statistics calculation command
 parser_stats_calc = subparsers.add_parser(valid_commands[3], help="Calculate statistics, including \
-    mean, median, and mode of WIP: TODO")
+    mean, median, standard deviation, and many more.")
 parser_stats_calc.add_argument("user_or_task", help="Denote whether you want to calculate the statistics \
     of all users, or per task for one user.", choices=["all_users", "per_task"])
 parser_stats_calc.add_argument("file_directory", help="The path to the collapsed fixation file directory.")
-parser_stats_calc.add_argument("output", help="When calculating for all users, this option is the \
-    CSV File to output the stats to. When calculating for per task for one user, this is the file directory \
-    that the outputs will be saved in.")
+parser_stats_calc.add_argument("output", help="The csv file to output the stats to. NOTE that this will \
+                                              be overwritten!")
 
 # Create parser for the AOI calculations command
 parser_aoi_calc = subparsers.add_parser(valid_commands[4], help="Calculate whether the fixations \

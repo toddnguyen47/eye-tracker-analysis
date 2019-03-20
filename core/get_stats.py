@@ -8,6 +8,7 @@ class GetStats:
         self._header_row_hashset = {}
         self._col_names_list = ["FixationDuration", "Saccade_length", "Saccade_absolute_angle",
                                 "Saccade_relative_angle"]
+        self._header_per_task = {}
 
 
     def get_stats_all_users(self, file_dir, outfile):
@@ -192,144 +193,186 @@ class GetStats:
         return return_list
 
 
-    def get_stats_per_task(self, full_path_to_csv_file, output_dir):
+    def get_stats_per_task(self, full_path_to_csv_file, csv_output):
         """
         Get the stats per task.
         :param full_path_to_csv_file: The path where the input files are.
-        :param output_dir: Directory of the outputs
+        :param csv_output: Name of the CSV output
         :return:
         """
+        header_not_written = True
+        total_output_list = []
         for file1 in os.listdir(full_path_to_csv_file):
             if file1.endswith("csv"):
                 filepath = os.path.join(full_path_to_csv_file, file1)
-                self.calc_per_task_for_oneuser(filepath, output_dir)
+                dict_output = self.calc_per_task_for_oneuser(filepath)
+                total_output_list.append(dict_output)
+                print("Currently calculating stats for: {}".format(filepath.replace("\\", "/").split("/")[-1]))
+
+                # If the header isn't written yet
+                if header_not_written:
+                    header_not_written = False
+                    with open(csv_output, "w") as file:
+                        file.write(",".join(self._header_per_task))
+                        file.write("\n")
+
+                with open(csv_output, "a", buffering=4096) as file:
+                    for key in dict_output.keys():
+                        temp_list = []
+                        for key2 in dict_output[key].keys():
+                            temp_list.append(dict_output[key][key2])
+
+                        # Should never happen
+                        if len(temp_list) != len(self._header_per_task):
+                            raise ValueError("Per task headers length does not match with length count of a row!")
+
+                        temp_list = [str(x) for x in temp_list]
+                        file.write(",".join(temp_list))
+                        file.write("\n")
 
 
-    def calc_per_task_for_oneuser(self, file_path, output_dir):
+    def calc_per_task_for_oneuser(self, filepath):
         """
-        Calculate the AOI numbers per task for one user.
-        :param file_path: Filepath to the CSV file
-        :param output_dir: Output directory.
-        :return:
+        Calculate stats per task for one user.
+        :param filepath: The absolute path of the file.
+        :return: A dictionary of the results, with the keys being the tasks
         """
-        with open(file_path, "r") as file:
-            df = pd.read_csv(file, index_col=False)
+        self._header_per_task = ["ParticipantID", "Task"]
+        output_dict = {}
+        total_num_fixations = 0
+        total_fixation_duration = 0
 
-        task_col = df["Current_task"]
-        max_len = len(task_col)
-        file_name = file_path.replace("\\", "/").split("/")[-1]
+        with open(filepath, "r") as file:
+            pd_dataframe = pd.read_csv(file, index_col=False)
+
         participant_id = ""
-        for char in file_name:
+        for char in filepath.replace("\\", "/").split("/")[-1]:
             if char.isdigit():
                 participant_id = "".join((participant_id, char))
 
-        stats_to_obtain_list = ["NumberOfFixations", "TotalFixationDuration", "FixationDurationAverage",
-                                "NumberOfSaccades", "TotalSaccadeLength", "SaccadeLengthAverage",
-                                "TotalSaccadeAbsAngle", "SaccadeAbsAngleAverage",
-                                "TotalSaccadeRelAngle", "SaccadeRelAngleAverage",
-                                "LongestFixationDurationInAOI", "ProportionOfTotalFixations",
-                                "ProportionOfTotalFixationDuration"]
-        col_headers_list = ["Participant", "Task", "AOI"] + stats_to_obtain_list
-        stats_output_dict = {}
+        #
+        task_col = pd_dataframe["Current_task"]
+        aoi_col = pd_dataframe["AOI"]
 
-        # JSON Data containing information about all the possible AOIs
+        # # Get the name of the AOIs
         aoi_json_data = utils.load_in_aoi_json()
-        task_set = set()
-        dict_of_sums = {}
+        temp_data = aoi_json_data["HighBar"]
+        temp_data["NoAOI"] = None
+        aoi_list = []
+        for aoi in temp_data.keys():
+            s = "_".join((aoi, "AOI"))
+            aoi_list.append(s)
 
-        for i in range(max_len):
+        col_length = len(pd_dataframe.index)
+        for i in range(col_length):
             cur_task = task_col[i]
-            # Skip all pretasks
+            # Ignore all pretasks
             if cur_task.lower() != "pretask":
-                task_set.add(cur_task)
-
-                cur_aoi = str(df["AOI"][i])
+                cur_aoi = str(aoi_col[i])
+                # Ignore all fixations that are not in AOI
                 if cur_aoi.lower() == "nan".lower():
                     cur_aoi = "NoAOI_AOI"
 
-                # If cur_task is not in stats_output_dict yet, initialize it
-                if cur_task not in stats_output_dict:
-                    # First, initialize the dictionary. Each task has a dictionary of various AOIs. Each AOI
-                    # is a dictionary of all the stats
-                    stats_output_dict[cur_task] = {}
-                    temp_data = aoi_json_data["HighBar"]
-                    temp_data["NoAOI"] = None
-                    for key in temp_data.keys():
-                        key2 = "_".join((key, "AOI"))
-                        # Initialize this specific AOI stored in key2
-                        if key2 not in stats_output_dict[cur_task]:
-                            stats_output_dict[cur_task][key2] = {}
-                        # Initialize all the stats as well
-                        for stats in stats_to_obtain_list:
-                            stats_output_dict[cur_task][key2][stats] = 0
+                cur_fixation_duration = pd_dataframe["FixationDuration"][i].item()
+                total_fixation_duration += cur_fixation_duration
 
-                # Store the current dictionary in this temporary variable to avoid verbose typing
-                temp_dict = stats_output_dict[cur_task][cur_aoi]
+                cur_saccade_length = pd_dataframe["Saccade_length"][i].item()
+                cur_saccade_abs_angle = abs(pd_dataframe["Saccade_absolute_angle"][i].item())
+                cur_saccade_rel_angle = abs(pd_dataframe["Saccade_relative_angle"][i].item())
+                total_num_fixations += 1
 
-                # Get the total fixation duration
-                duration1 = df["FixationDuration"][i].item()
-                temp_dict["TotalFixationDuration"] += duration1
-                # Get the longest fixation duration in this particular AOI
-                if duration1 > temp_dict["LongestFixationDurationInAOI"]:
-                    temp_dict["LongestFixationDurationInAOI"] = duration1
+                # Initialize the dictionary if it doesn't exist yet
+                if cur_task not in output_dict:
+                    output_dict[cur_task] = {"ParticipantID": participant_id,
+                                             "Task": cur_task,
+                                            "NumFixations": 1,
+                                            "FixationDuration_Sum": cur_fixation_duration,
+                                            "FixationDuration_Average": 0,
+                                            "FixationDuration_StandardDeviation": 0,
+                                            "Saccade_length_Sum": cur_saccade_length,
+                                            "Saccade_length_Average": 0,
+                                            "Saccade_length_StandardDeviation": 0,
+                                            "Saccade_absolute_angle_Sum": cur_saccade_abs_angle,
+                                            "Saccade_absolute_angle_Average": 0,
+                                            "Saccade_absolute_angle_StandardDeviation": 0,
+                                            "Saccade_relative_angle_Sum": cur_saccade_rel_angle,
+                                            "Saccade_relative_angle_Average": 0,
+                                            "Saccade_relative_angle_StandardDeviation": 0}
 
-                # Increment the number of fixations in this AOI
-                temp_dict["NumberOfFixations"] += 1
-
-                # Get the total fixation duration for proportion calculations later
-                if cur_task not in dict_of_sums:
-                    dict_of_sums[cur_task] = {"TotalFixation": 1,
-                        "TotalFixationDuration": duration1}
+                # Cur AOI is already in the dictionary
                 else:
-                    dict_of_sums[cur_task]["TotalFixation"] += 1
-                    dict_of_sums[cur_task]["TotalFixationDuration"] += duration1
+                    # Fixation Duration Sum
+                    temp_dict_1 = output_dict[cur_task]
+                    temp_dict_1["NumFixations"] += 1
+                    temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
 
-                # Get the total saccade length
-                temp_dict["TotalSaccadeLength"] += df["Saccade_length"][i].item()
-                # Inrement the number of saccades in this AOI
-                temp_dict["NumberOfSaccades"] += 1
+                    # Saccade Length Sum
+                    temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
 
-                # Get saccade absolute angle
-                temp_dict["TotalSaccadeAbsAngle"] += abs(df["Saccade_absolute_angle"][i].item())
-                # Get saccade relative angle
-                temp_dict["TotalSaccadeRelAngle"] += abs(df["Saccade_relative_angle"][i].item())
+                    # Saccade Absolute Angle Sum
+                    temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
 
-        # Post Stats calculation
-        for task in task_set:
-            for aoi in stats_output_dict[task].keys():
-                temp_dict = stats_output_dict[task][aoi]
-                # Get the fixation duration average
-                if temp_dict["NumberOfFixations"] == 0:
-                    temp_dict["FixationDurationAverage"] = 0
+                    # Saccade Relative Angle Sum
+                    temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
+
+                # Get stats per AOI
+                # Initialize if the AOI doesn't exist yet
+                aoi_num_fix = "_".join((cur_aoi, "NumberOfFixations"))
+                temp_dict_1 = output_dict[cur_task]
+                if aoi_num_fix not in temp_dict_1:
+                    for aoi_1 in aoi_list:
+                        temp_dict_1[aoi_1 + "_NumberOfFixations"] = 1
+                        temp_dict_1[aoi_1 + "_FixationDurationSum"] = cur_fixation_duration
+                        temp_dict_1[aoi_1 + "_FixationDurationMean"] = 0
+                        temp_dict_1[aoi_1 + "_LongestFixationInAOI"] = cur_fixation_duration
+                        temp_dict_1[aoi_1 + "_ProportionOfTotalFixations"]  = 0
+                        temp_dict_1[aoi_1 + "_ProportionOFTotalFixationDuration"] = 0
                 else:
-                    temp_dict["FixationDurationAverage"] = temp_dict["TotalFixationDuration"] / temp_dict["NumberOfFixations"]
+                    temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
+                    temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
 
-                # Get the saccade length average
-                num_saccades = temp_dict["NumberOfSaccades"]
-                if num_saccades == 0:
-                    temp_dict["SaccadeLengthAverage"] = 0
-                    temp_dict["SaccadeAbsAngleAverage"] = 0
-                    temp_dict["SaccadeRelAngleAverage"] = 0
-                else:
-                    temp_dict["SaccadeLengthAverage"] = temp_dict["TotalSaccadeLength"] / num_saccades
-                    temp_dict["SaccadeAbsAngleAverage"] = temp_dict["TotalSaccadeAbsAngle"] / num_saccades
-                    temp_dict["SaccadeRelAngleAverage"] = temp_dict["TotalSaccadeRelAngle"] / num_saccades
+                    if cur_fixation_duration > temp_dict_1[cur_aoi + "_LongestFixationInAOI"]:
+                        temp_dict_1[cur_aoi + "_LongestFixationInAOI"] = cur_fixation_duration
 
-                # Get Fixation Proportion
-                if dict_of_sums[task]["TotalFixation"] == 0:
-                    temp_dict["ProportionOfTotalFixations"] = 0
-                else:
-                    n1 = temp_dict["NumberOfFixations"] / dict_of_sums[task]["TotalFixation"]
-                    temp_dict["ProportionOfTotalFixations"] = n1
+        # +------------------------+
+        # | Post stats calculation |
+        # +------------------------+
+        is_first_time = True
+        for cur_task in output_dict.keys():
+            temp_dict_1 = output_dict[cur_task]
+            # Add keys to column headers, but only do it once
+            if is_first_time:
+                for key in temp_dict_1.keys():
+                    if key not in self._header_per_task:
+                        self._header_per_task.append(key)
 
-                # Get Fixation Duration Proportion
-                if dict_of_sums[task]["TotalFixationDuration"] == 0:
-                    temp_dict["ProportionOfTotalFixationDuration"] = 0
-                else:
-                    n1 = temp_dict["TotalFixationDuration"] / dict_of_sums[task]["TotalFixationDuration"]
-                    temp_dict["ProportionOfTotalFixationDuration"] = n1
+            is_first_time = False
+            num_fixations = temp_dict_1["NumFixations"]
 
-        self.output_per_task_stats(col_headers_list, stats_output_dict, participant_id, output_dir)
+            if num_fixations != 0:
+                # Get average fixation duration
+                temp_dict_1["FixationDuration_Average"]  = temp_dict_1["FixationDuration_Sum"] / num_fixations
+
+                # Get average saccade length
+                temp_dict_1["Saccade_length_Average"] = temp_dict_1["Saccade_length_Sum"] / num_fixations
+
+                # Get average saccade absolute angle
+                temp_dict_1["Saccade_absolute_angle_Average"] = temp_dict_1["Saccade_absolute_angle_Sum"] / num_fixations
+
+                # Get average relative angle
+                temp_dict_1["Saccade_relative_angle_Average"] = temp_dict_1["Saccade_relative_angle_Sum"] / num_fixations
+
+                # Now, calculate post-task per AOI
+                for aoi in aoi_list:
+                    # Get proportion of total fixations
+                    aoi_num_fix = temp_dict_1[aoi + "_NumberOfFixations"]
+                    temp_dict_1[aoi + "_ProportionOfTotalFixations"] = aoi_num_fix / num_fixations
+
+                    # Get proportion of total fixation duration
+                    aoi_fix_duration = temp_dict_1[aoi + "_FixationDurationSum"]
+                    temp_dict_1[aoi + "_ProportionOFTotalFixationDuration"] = aoi_fix_duration / temp_dict_1["FixationDuration_Sum"]
+
+        return output_dict
 
 
     def output_per_task_stats(self, col_headers, dict_input, participant_id, output_dir):
