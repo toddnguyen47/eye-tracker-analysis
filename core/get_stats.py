@@ -99,14 +99,13 @@ class GetStats:
         :return: A list of stats, plus any new addititions to self.__header_row_hashset
         """
         # Create a temporary dictionary for this function
-        dict1 = {}
+        dict1 = {"TotalNumFixations": 0}
 
         task_col = pd_dataframe["Current_task"]
         aoi_col = pd_dataframe["AOI"]
         fixation_duration = pd_dataframe["FixationDuration"]
 
         temp_data = aoi_json_data["HighBar"]
-        temp_data["NoAOI"] = None
         aoi_list = []
         # Now, we will use our HashSet dict as temporary storage for AOI-related information
         # Initialize the HashSet dict
@@ -120,18 +119,14 @@ class GetStats:
             dict1[key_2 + "_ProportionOfTotalFixations"] = 0
             dict1[key_2 + "_ProportionOfTotalFixationDuration"] = 0
 
-        total_num_fixations = 0
         total_fixation_duration = 0
 
         for i in range(len(task_col)):
             cur_task = task_col[i]
             cur_aoi = str(aoi_col[i])
-            # Ignore all pretask
-            if cur_task.lower() != "pretask".lower():
-                total_num_fixations += 1
-                # Ignore all fixations that are not in AOI
-                if cur_aoi.lower() == "nan".lower():
-                    cur_aoi = "NoAOI_AOI"
+            # Ignore all pretask and any tasks that are not in the AOI
+            if cur_task.lower() != "pretask".lower() and cur_aoi.lower() != "nan".lower():
+                dict1["TotalNumFixations"] += 1
 
                 # cur_task_graph = list(graph_col[i].lower())
                 # # Lowercase cur task graph, then uppercase only the first character
@@ -168,10 +163,10 @@ class GetStats:
         for key in aoi_list:
             # Get the proportion of total number of fixations in AOI
             proportion_key = "_ProportionOfTotalFixations"
-            if total_num_fixations == 0:
+            if dict1["TotalNumFixations"] == 0:
                 dict1[key + proportion_key] = 0
             else:
-                proportion_value = dict1[key + "_NumberOfFixations"] / total_num_fixations
+                proportion_value = dict1[key + "_NumberOfFixations"] / dict1["TotalNumFixations"]
                 proportion_value = round(proportion_value, 6)
                 dict1[key + proportion_key] = proportion_value
 
@@ -257,7 +252,6 @@ class GetStats:
         # # Get the name of the AOIs
         aoi_json_data = utils.load_in_aoi_json()
         temp_data = aoi_json_data["HighBar"]
-        temp_data["NoAOI"] = None
         aoi_list = []
         for aoi in temp_data.keys():
             s = "_".join((aoi, "AOI"))
@@ -266,13 +260,9 @@ class GetStats:
         col_length = len(pd_dataframe.index)
         for i in range(col_length):
             cur_task = task_col[i]
-            # Ignore all pretasks
-            if cur_task.lower() != "pretask":
-                cur_aoi = str(aoi_col[i])
-                # Ignore all fixations that are not in AOI
-                if cur_aoi.lower() == "nan".lower():
-                    cur_aoi = "NoAOI_AOI"
-
+            cur_aoi = str(aoi_col[i])
+            # Ignore all pretasks and ignore all AOI that are not present
+            if cur_task.lower() != "pretask" and cur_aoi.lower() != "nan":
                 cur_fixation_duration = pd_dataframe["FixationDuration"][i].item()
                 total_fixation_duration += cur_fixation_duration
 
@@ -285,35 +275,33 @@ class GetStats:
                 if cur_task not in output_dict:
                     output_dict[cur_task] = {"ParticipantID": participant_id,
                                              "Task": cur_task,
-                                            "NumFixations": 1,
-                                            "FixationDuration_Sum": cur_fixation_duration,
+                                            "NumFixations": 0,
+                                            "FixationDuration_Sum": 0,
                                             "FixationDuration_Average": 0,
                                             "FixationDuration_StandardDeviation": 0,
-                                            "Saccade_length_Sum": cur_saccade_length,
+                                            "Saccade_length_Sum": 0,
                                             "Saccade_length_Average": 0,
                                             "Saccade_length_StandardDeviation": 0,
-                                            "Saccade_absolute_angle_Sum": cur_saccade_abs_angle,
+                                            "Saccade_absolute_angle_Sum": 0,
                                             "Saccade_absolute_angle_Average": 0,
                                             "Saccade_absolute_angle_StandardDeviation": 0,
-                                            "Saccade_relative_angle_Sum": cur_saccade_rel_angle,
+                                            "Saccade_relative_angle_Sum": 0,
                                             "Saccade_relative_angle_Average": 0,
                                             "Saccade_relative_angle_StandardDeviation": 0}
 
-                # Cur AOI is already in the dictionary
-                else:
-                    # Fixation Duration Sum
-                    temp_dict_1 = output_dict[cur_task]
-                    temp_dict_1["NumFixations"] += 1
-                    temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
+                # Fixation Duration Sum
+                temp_dict_1 = output_dict[cur_task]
+                temp_dict_1["NumFixations"] += 1
+                temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
 
-                    # Saccade Length Sum
-                    temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
+                # Saccade Length Sum
+                temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
 
-                    # Saccade Absolute Angle Sum
-                    temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
+                # Saccade Absolute Angle Sum
+                temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
 
-                    # Saccade Relative Angle Sum
-                    temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
+                # Saccade Relative Angle Sum
+                temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
 
                 # Get stats per AOI
                 # Initialize if the AOI doesn't exist yet
@@ -321,18 +309,18 @@ class GetStats:
                 temp_dict_1 = output_dict[cur_task]
                 if aoi_num_fix not in temp_dict_1:
                     for aoi_1 in aoi_list:
-                        temp_dict_1[aoi_1 + "_NumberOfFixations"] = 1
-                        temp_dict_1[aoi_1 + "_FixationDurationSum"] = cur_fixation_duration
+                        temp_dict_1[aoi_1 + "_NumberOfFixations"] = 0
+                        temp_dict_1[aoi_1 + "_FixationDurationSum"] = 0
                         temp_dict_1[aoi_1 + "_FixationDurationMean"] = 0
-                        temp_dict_1[aoi_1 + "_LongestFixationInAOI"] = cur_fixation_duration
+                        temp_dict_1[aoi_1 + "_LongestFixationInAOI"] = 0
                         temp_dict_1[aoi_1 + "_ProportionOfTotalFixations"]  = 0
                         temp_dict_1[aoi_1 + "_ProportionOFTotalFixationDuration"] = 0
-                else:
-                    temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
-                    temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
 
-                    if cur_fixation_duration > temp_dict_1[cur_aoi + "_LongestFixationInAOI"]:
-                        temp_dict_1[cur_aoi + "_LongestFixationInAOI"] = cur_fixation_duration
+                temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
+                temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
+
+                if cur_fixation_duration > temp_dict_1[cur_aoi + "_LongestFixationInAOI"]:
+                    temp_dict_1[cur_aoi + "_LongestFixationInAOI"] = cur_fixation_duration
 
         # +------------------------+
         # | Post stats calculation |
