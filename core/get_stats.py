@@ -99,7 +99,7 @@ class GetStats:
         :return: A list of stats, plus any new addititions to self.__header_row_hashset
         """
         # Create a temporary dictionary for this function
-        dict1 = {"TotalNumFixations": 0}
+        dict1 = {"TotalNumFixations": 0, "TotalNumFixationsInAOI": 0, "TotalProportionsOfFixationsInAOI": 0}
 
         task_col = pd_dataframe["Current_task"]
         aoi_col = pd_dataframe["AOI"]
@@ -125,39 +125,41 @@ class GetStats:
             cur_task = task_col[i]
             cur_aoi = str(aoi_col[i])
             # Ignore all pretask and any tasks that are not in the AOI
-            if cur_task.lower() != "pretask".lower() and cur_aoi.lower() != "nan".lower():
+            if cur_task.lower() != "pretask".lower():
                 dict1["TotalNumFixations"] += 1
+                if cur_aoi.lower() != "nan".lower():
+                    dict1["TotalNumFixationsInAOI"] += 1
 
-                # cur_task_graph = list(graph_col[i].lower())
-                # # Lowercase cur task graph, then uppercase only the first character
-                # cur_task_graph[0] = cur_task_graph[0].upper()
-                # cur_task_graph = "".join(cur_task_graph)
+                    # cur_task_graph = list(graph_col[i].lower())
+                    # # Lowercase cur task graph, then uppercase only the first character
+                    # cur_task_graph[0] = cur_task_graph[0].upper()
+                    # cur_task_graph = "".join(cur_task_graph)
 
-                # h_or_l = cur_task[1]
-                # high_or_low = "High" if h_or_l.lower() == "h".lower() else "Low"
-                # cur_task_key = "".join((high_or_low, cur_task_graph))
+                    # h_or_l = cur_task[1]
+                    # high_or_low = "High" if h_or_l.lower() == "h".lower() else "Low"
+                    # cur_task_key = "".join((high_or_low, cur_task_graph))
 
-                # Current Task Fixation Duration
-                cur_task_fixation_duration = fixation_duration[i].item()
-                total_fixation_duration += cur_task_fixation_duration
+                    # Current Task Fixation Duration
+                    cur_task_fixation_duration = fixation_duration[i].item()
+                    total_fixation_duration += cur_task_fixation_duration
 
-                num_fixations_1 = dict1[cur_aoi + "_NumberOfFixations"] + 1
-                fix_duration_1 = dict1[cur_aoi + "_FixationDurationSum"] +\
-                                 cur_task_fixation_duration
-                # To prevent dividing by zero
-                if num_fixations_1 == 0:
-                    mean_fix_duration_1 = 0
-                else:
-                    mean_fix_duration_1 = fix_duration_1 / num_fixations_1
+                    num_fixations_1 = dict1[cur_aoi + "_NumberOfFixations"] + 1
+                    fix_duration_1 = dict1[cur_aoi + "_FixationDurationSum"] +\
+                                     cur_task_fixation_duration
+                    # To prevent dividing by zero
+                    if num_fixations_1 == 0:
+                        mean_fix_duration_1 = 0
+                    else:
+                        mean_fix_duration_1 = fix_duration_1 / num_fixations_1
 
-                dict1[cur_aoi + "_NumberOfFixations"] = num_fixations_1
-                dict1[cur_aoi + "_FixationDurationSum"] = fix_duration_1
-                dict1[cur_aoi + "_FixationDurationMean"] = \
-                    round(mean_fix_duration_1, 4)
+                    dict1[cur_aoi + "_NumberOfFixations"] = num_fixations_1
+                    dict1[cur_aoi + "_FixationDurationSum"] = fix_duration_1
+                    dict1[cur_aoi + "_FixationDurationMean"] = \
+                        round(mean_fix_duration_1, 4)
 
-                # Get the longest fixation in AOI
-                if dict1[cur_aoi + "_LongestFixationInAOI"] < cur_task_fixation_duration:
-                    dict1[cur_aoi + "_LongestFixationInAOI"] = cur_task_fixation_duration
+                    # Get the longest fixation in AOI
+                    if dict1[cur_aoi + "_LongestFixationInAOI"] < cur_task_fixation_duration:
+                        dict1[cur_aoi + "_LongestFixationInAOI"] = cur_task_fixation_duration
 
         # Obtain Post-Stats
         for key in aoi_list:
@@ -178,6 +180,10 @@ class GetStats:
                 proportion_value = dict1[key + "_FixationDurationSum"] / total_fixation_duration
                 proportion_value = round(proportion_value, 6)
                 dict1[key + proportion_key] = proportion_value
+
+        # Get total proportions of fixations in aoi
+        if dict1["TotalNumFixations"] != 0:
+            dict1["TotalProportionsOfFixationsInAOI"] = dict1["TotalNumFixationsInAOI"] / dict1["TotalNumFixations"]
 
         # Add keys to list, then add values to return list
         return_list = []
@@ -225,6 +231,8 @@ class GetStats:
                         file.write(",".join(temp_list))
                         file.write("\n")
 
+        print("Finished exporting to {0}".format(csv_output.replace("\\", "/")))
+
 
     def calc_per_task_for_oneuser(self, filepath):
         """
@@ -245,7 +253,6 @@ class GetStats:
             if char.isdigit():
                 participant_id = "".join((participant_id, char))
 
-        #
         task_col = pd_dataframe["Current_task"]
         aoi_col = pd_dataframe["AOI"]
 
@@ -262,65 +269,70 @@ class GetStats:
             cur_task = task_col[i]
             cur_aoi = str(aoi_col[i])
             # Ignore all pretasks and ignore all AOI that are not present
-            if cur_task.lower() != "pretask" and cur_aoi.lower() != "nan":
-                cur_fixation_duration = pd_dataframe["FixationDuration"][i].item()
-                total_fixation_duration += cur_fixation_duration
-
-                cur_saccade_length = pd_dataframe["Saccade_length"][i].item()
-                cur_saccade_abs_angle = abs(pd_dataframe["Saccade_absolute_angle"][i].item())
-                cur_saccade_rel_angle = abs(pd_dataframe["Saccade_relative_angle"][i].item())
-                total_num_fixations += 1
-
+            if cur_task.lower() != "pretask":
                 # Initialize the dictionary if it doesn't exist yet
                 if cur_task not in output_dict:
                     output_dict[cur_task] = {"ParticipantID": participant_id,
                                              "Task": cur_task,
-                                            "NumFixations": 0,
-                                            "FixationDuration_Sum": 0,
-                                            "FixationDuration_Average": 0,
-                                            "FixationDuration_StandardDeviation": 0,
-                                            "Saccade_length_Sum": 0,
-                                            "Saccade_length_Average": 0,
-                                            "Saccade_length_StandardDeviation": 0,
-                                            "Saccade_absolute_angle_Sum": 0,
-                                            "Saccade_absolute_angle_Average": 0,
-                                            "Saccade_absolute_angle_StandardDeviation": 0,
-                                            "Saccade_relative_angle_Sum": 0,
-                                            "Saccade_relative_angle_Average": 0,
-                                            "Saccade_relative_angle_StandardDeviation": 0}
-
-                # Fixation Duration Sum
-                temp_dict_1 = output_dict[cur_task]
-                temp_dict_1["NumFixations"] += 1
-                temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
-
-                # Saccade Length Sum
-                temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
-
-                # Saccade Absolute Angle Sum
-                temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
-
-                # Saccade Relative Angle Sum
-                temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
-
-                # Get stats per AOI
-                # Initialize if the AOI doesn't exist yet
-                aoi_num_fix = "_".join((cur_aoi, "NumberOfFixations"))
-                temp_dict_1 = output_dict[cur_task]
-                if aoi_num_fix not in temp_dict_1:
+                                             "TotalNumFixations": 0,
+                                             "TotalNumFixationsInAOI": 0,
+                                             "TotalProportionsOfFixationsInAOI": 0,
+                                             "FixationDuration_Sum": 0,
+                                             "FixationDuration_Average": 0,
+                                             "FixationDuration_StandardDeviation": 0,
+                                             "Saccade_length_Sum": 0,
+                                             "Saccade_length_Average": 0,
+                                             "Saccade_length_StandardDeviation": 0,
+                                             "Saccade_absolute_angle_Sum": 0,
+                                             "Saccade_absolute_angle_Average": 0,
+                                             "Saccade_absolute_angle_StandardDeviation": 0,
+                                             "Saccade_relative_angle_Sum": 0,
+                                             "Saccade_relative_angle_Average": 0,
+                                             "Saccade_relative_angle_StandardDeviation": 0}
+                    # Also initialize the AOI columns
+                    temp_dict_1 = output_dict[cur_task]
                     for aoi_1 in aoi_list:
                         temp_dict_1[aoi_1 + "_NumberOfFixations"] = 0
                         temp_dict_1[aoi_1 + "_FixationDurationSum"] = 0
                         temp_dict_1[aoi_1 + "_FixationDurationMean"] = 0
                         temp_dict_1[aoi_1 + "_LongestFixationInAOI"] = 0
-                        temp_dict_1[aoi_1 + "_ProportionOfTotalFixations"]  = 0
+                        temp_dict_1[aoi_1 + "_ProportionOfTotalFixations"] = 0
                         temp_dict_1[aoi_1 + "_ProportionOFTotalFixationDuration"] = 0
 
-                temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
-                temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
+                output_dict[cur_task]["TotalNumFixations"] += 1
 
-                if cur_fixation_duration > temp_dict_1[cur_aoi + "_LongestFixationInAOI"]:
-                    temp_dict_1[cur_aoi + "_LongestFixationInAOI"] = cur_fixation_duration
+                if cur_aoi.lower() != "nan":
+                    cur_fixation_duration = pd_dataframe["FixationDuration"][i].item()
+                    total_fixation_duration += cur_fixation_duration
+
+                    cur_saccade_length = pd_dataframe["Saccade_length"][i].item()
+                    cur_saccade_abs_angle = abs(pd_dataframe["Saccade_absolute_angle"][i].item())
+                    cur_saccade_rel_angle = abs(pd_dataframe["Saccade_relative_angle"][i].item())
+                    total_num_fixations += 1
+
+                    # Fixation Duration Sum
+                    temp_dict_1 = output_dict[cur_task]
+                    temp_dict_1["TotalNumFixationsInAOI"] += 1
+                    temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
+
+                    # Saccade Length Sum
+                    temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
+
+                    # Saccade Absolute Angle Sum
+                    temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
+
+                    # Saccade Relative Angle Sum
+                    temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
+
+                    # Get stats per AOI
+                    # Initialize if the AOI doesn't exist yet
+                    aoi_num_fix = "_".join((cur_aoi, "NumberOfFixations"))
+                    temp_dict_1 = output_dict[cur_task]
+                    temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
+                    temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
+
+                    if cur_fixation_duration > temp_dict_1[cur_aoi + "_LongestFixationInAOI"]:
+                        temp_dict_1[cur_aoi + "_LongestFixationInAOI"] = cur_fixation_duration
 
         # +------------------------+
         # | Post stats calculation |
@@ -335,7 +347,7 @@ class GetStats:
                         self._header_per_task.append(key)
 
             is_first_time = False
-            num_fixations = temp_dict_1["NumFixations"]
+            num_fixations = temp_dict_1["TotalNumFixationsInAOI"]
 
             if num_fixations != 0:
                 # Get average fixation duration
@@ -365,6 +377,10 @@ class GetStats:
                     total_fix_dur_sum = temp_dict_1["FixationDuration_Sum"]
                     if total_fix_dur_sum != 0:
                         temp_dict_1[aoi + "_ProportionOFTotalFixationDuration"] = aoi_fix_duration / total_fix_dur_sum
+
+            # Get proportion of fixations in aoi vs. total fixations
+            if temp_dict_1["TotalNumFixations"] != 0:
+                temp_dict_1["TotalProportionsOfFixationsInAOI"] = temp_dict_1["TotalNumFixationsInAOI"] / temp_dict_1["TotalNumFixations"]
 
         return output_dict
 
