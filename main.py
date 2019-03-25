@@ -66,7 +66,7 @@ parser_aoi_calc = subparsers.add_parser(valid_commands[4], help="Calculate wheth
     are in a certain Area of Interest (AOI) and if it is in an AOI, note which AOI that fixation \
     belongs to.")
 parser_aoi_calc.add_argument("file_directory", help="The directory where the collapsed CSV files \
-    are stored. NOTE: This will overwrite all the files in this directory!")
+    are stored.")
 
 # Compile all the command line parser and subparsers
 args = parser.parse_args()

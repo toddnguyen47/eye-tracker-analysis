@@ -11,23 +11,23 @@ class AreaOfInterest:
         # Read in the json file
         self._aoi_file = utils.load_in_aoi_json()
 
+        # Only ask user once if it is okay to overwrite
+        self._output_aoi_path_exists_first_time = True
 
-    def execute(self, file_directory):
+
+    def execute(self, input_file_dir):
         """
-        WARNING: This function WILL overwrite any existing CSV files. Make sure you have adequate backup files
-        before executing this function!
-
-        Read in csv file/files in file_directory, and add 5 AOI columns: aoi_topleft_x, aoi_topleft_y,
+        Read in csv file/files in input_file_dir, and add 5 AOI columns: aoi_topleft_x, aoi_topleft_y,
         aoi_width, aoi_height, and is_saccade_within_aoi.
 
-        :params file_directory: A file or file directory to add the 5 AOI columns to.
+        :params input_file_dir: A file or file directory to add the 5 AOI columns to.
         """
-        # If file_directory is a file
-        if os.path.isfile(file_directory):
-            self.add_aoi_to_csv(file_directory)
-        # Else, if file_directory is a file directory
+        # If input_file_dir is a file
+        if os.path.isfile(input_file_dir):
+            self.add_aoi_to_csv(input_file_dir)
+        # Else, if input_file_dir is a file directory
         else:
-            for subdir, dirs, files in os.walk(file_directory):
+            for subdir, dirs, files in os.walk(input_file_dir):
                 for file in files:
                     if file.endswith(".csv"):
                         full_path = os.path.join(subdir, file)
@@ -85,12 +85,28 @@ class AreaOfInterest:
         parent_folder = temp_list[-2]
 
         path_before = csv_file[:-(len(csv_filename) + len("/") + len(parent_folder) + len("/"))]
-        csv_path_collapsed = os.path.join(path_before, "CollapsedWithAOI")
-        # If directory doesn't exist
-        if not os.path.isdir(csv_path_collapsed):
-            os.mkdir(csv_path_collapsed)
+        csv_path_collapsed_aoi = os.path.join(path_before, "CollapsedWithAOI")
 
-        csv_file_output = os.path.join(csv_path_collapsed, csv_filename)
+        if self._output_aoi_path_exists_first_time:
+            self._output_aoi_path_exists_first_time = False
+
+            # If directory exists, ask user if we want to overwrite csv files
+            if os.path.isdir(csv_path_collapsed_aoi):
+                print("{0} exists, which means CSV files might exist in here.".format(csv_path_collapsed_aoi.replace("\\", "/")))
+                print("Is it okay to overwrite these CSV files? (Y/N)")
+                yes_or_no = input(">>> ")
+
+                # If no, exit
+                if yes_or_no.lower() == "n":
+                    print("Exiting program...")
+                    import sys
+                    sys.exit()
+
+            # Create directory if directory doesn't exist
+            else:
+                os.mkdir(csv_path_collapsed_aoi)
+
+        csv_file_output = os.path.join(csv_path_collapsed_aoi, csv_filename)
         csv_df.to_csv(csv_file_output, index=None)
         print("Finished exporting to {}".format(csv_file_output.replace("\\", "/")))
 
