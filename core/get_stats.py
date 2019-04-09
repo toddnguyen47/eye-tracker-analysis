@@ -234,11 +234,11 @@ class GetStats:
         print("Finished exporting to {0}".format(csv_output.replace("\\", "/")))
 
 
-    def calc_per_task_for_oneuser(self, filepath):
+    def calc_per_task_for_oneuser(self, filepath: str):
         """
         Calculate stats per task for one user.
         :param filepath: The absolute path of the file.
-        :return: A dictionary of the results, with the keys being the tasks
+        :return A dictionary of the results, with the keys being the tasks
         """
         self._header_per_task = ["ParticipantID", "Task"]
         output_dict = {}
@@ -264,12 +264,56 @@ class GetStats:
             s = "_".join((aoi, "AOI"))
             aoi_list.append(s)
 
+        # To store the task that have already been counted
+        # NOTE: This is only used as of 2019/04/09 because our data has duplicate tasks
+        task_set = set()
+
+        # Store the previous task. The previous task will not have the "appended" name (in case of
+        # repeated tasks) in order to preserve the original name of the tasks.
+        # For example, if the task is CH5, and the repeated task was named CH52, and prev_task
+        # was stored as CH52, then nothing in the original data will match CH52
+        prev_task = ""
+        # Also store the previous duplicate task name to add to the task_set
+        prev_duplicate_name = ""
+
+        # Duplicate flag: set to yes to change the cur_task to cur_task2, cur_task3, etc.
+        duplicate_flag = False
+
+        # Iterate through all the tasks
         col_length = len(pd_dataframe.index)
         for i in range(col_length):
             cur_task = task_col[i]
             cur_aoi = str(aoi_col[i])
             # Ignore all pretasks and ignore all AOI that are not present
             if cur_task.lower() != "pretask":
+                # Only check for duplicate task when a new task is picked up
+                if prev_task != cur_task:
+                    # Remember to set previous task to unchanged current task!
+                    prev_task = cur_task
+
+                    # If duplicate flag was set in the previous runs, also add the previous duplicate name
+                    if duplicate_flag:
+                        task_set.add(prev_duplicate_name)
+
+                    # Change the cur_task to cur_task2, cur_task3, etc. if cur_task is already in the set
+                    duplicate_flag = cur_task in task_set
+
+                    # Add the current task, whether the name is changed or not, into the task_set
+                    task_set.add(cur_task)
+
+                # If the duplicate flag is set
+                if duplicate_flag:
+                    # Iterate through names until a name is not used yet
+                    count2 = 0
+                    new_name_temp = cur_task
+                    while new_name_temp in task_set:
+                        new_name_temp = cur_task + chr(ord('a') + count2)
+                        count2 += 1
+                    # Reassign cur_task to new_name_temp
+                    cur_task = new_name_temp
+                    # Also store previous duplicate name
+                    prev_duplicate_name = new_name_temp
+
                 # Initialize the dictionary if it doesn't exist yet
                 if cur_task not in output_dict:
                     output_dict[cur_task] = {"ParticipantID": participant_id,
