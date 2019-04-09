@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import core.utils as utils
+import numpy as np
 
 
 class GetStats:
@@ -323,16 +324,16 @@ class GetStats:
                                              "TotalProportionsOfFixationsInAOI": 0,
                                              "FixationDuration_Sum": 0,
                                              "FixationDuration_Average": 0,
-                                             "FixationDuration_StandardDeviation": 0,
+                                             "FixationDuration_StandardDeviation": [],
                                              "Saccade_length_Sum": 0,
                                              "Saccade_length_Average": 0,
-                                             "Saccade_length_StandardDeviation": 0,
+                                             "Saccade_length_StandardDeviation": [],
                                              "Saccade_absolute_angle_Sum": 0,
                                              "Saccade_absolute_angle_Average": 0,
-                                             "Saccade_absolute_angle_StandardDeviation": 0,
+                                             "Saccade_absolute_angle_StandardDeviation": [],
                                              "Saccade_relative_angle_Sum": 0,
                                              "Saccade_relative_angle_Average": 0,
-                                             "Saccade_relative_angle_StandardDeviation": 0}
+                                             "Saccade_relative_angle_StandardDeviation": []}
                     # Also initialize the AOI columns
                     temp_dict_1 = output_dict[cur_task]
                     for aoi_1 in aoi_list:
@@ -346,6 +347,7 @@ class GetStats:
                 output_dict[cur_task]["TotalNumFixations"] += 1
 
                 if cur_aoi.lower() != "nan":
+                    # Fixation duration
                     cur_fixation_duration = pd_dataframe["FixationDuration"][i].item()
                     total_fixation_duration += cur_fixation_duration
 
@@ -358,15 +360,20 @@ class GetStats:
                     temp_dict_1 = output_dict[cur_task]
                     temp_dict_1["TotalNumFixationsInAOI"] += 1
                     temp_dict_1["FixationDuration_Sum"] += cur_fixation_duration
+                    # Store list for standard deviation calculations later
+                    temp_dict_1["FixationDuration_StandardDeviation"].append(cur_fixation_duration)
 
                     # Saccade Length Sum
                     temp_dict_1["Saccade_length_Sum"] += cur_saccade_length
+                    temp_dict_1["Saccade_length_StandardDeviation"].append(cur_saccade_length)
 
                     # Saccade Absolute Angle Sum
                     temp_dict_1["Saccade_absolute_angle_Sum"] += cur_saccade_abs_angle
+                    temp_dict_1["Saccade_absolute_angle_StandardDeviation"].append(cur_saccade_abs_angle)
 
                     # Saccade Relative Angle Sum
                     temp_dict_1["Saccade_relative_angle_Sum"] += cur_saccade_rel_angle
+                    temp_dict_1["Saccade_relative_angle_StandardDeviation"].append(cur_saccade_rel_angle)
 
                     # Get stats per AOI
                     # Initialize if the AOI doesn't exist yet
@@ -396,15 +403,26 @@ class GetStats:
             if num_fixations != 0:
                 # Get average fixation duration
                 temp_dict_1["FixationDuration_Average"]  = temp_dict_1["FixationDuration_Sum"] / num_fixations
+                # Get standard deviation for fixation duration
+                temp_dict_1["FixationDuration_StandardDeviation"] = np.std(
+                    temp_dict_1["FixationDuration_StandardDeviation"])
 
                 # Get average saccade length
                 temp_dict_1["Saccade_length_Average"] = temp_dict_1["Saccade_length_Sum"] / num_fixations
+                # Get standard deviation for saccade length
+                temp_dict_1["Saccade_length_StandardDeviation"] = np.std(temp_dict_1["Saccade_length_StandardDeviation"])
 
                 # Get average saccade absolute angle
                 temp_dict_1["Saccade_absolute_angle_Average"] = temp_dict_1["Saccade_absolute_angle_Sum"] / num_fixations
+                # Get standard deviation for saccade absolute angle
+                temp_dict_1["Saccade_absolute_angle_StandardDeviation"] = np.std(
+                    temp_dict_1["Saccade_absolute_angle_StandardDeviation"])
 
-                # Get average relative angle
+                # Get average saccade relative angle
                 temp_dict_1["Saccade_relative_angle_Average"] = temp_dict_1["Saccade_relative_angle_Sum"] / num_fixations
+                # Get standard deviation for saccade relative angle
+                temp_dict_1["Saccade_relative_angle_StandardDeviation"] = np.std(
+                    temp_dict_1["Saccade_relative_angle_StandardDeviation"])
 
                 # Now, calculate post-task per AOI
                 for aoi in aoi_list:
