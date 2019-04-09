@@ -207,9 +207,10 @@ class GetStats:
         for file1 in os.listdir(full_path_to_csv_file):
             if file1.endswith("csv"):
                 filepath = os.path.join(full_path_to_csv_file, file1)
+                print("Currently calculating stats for: {}".format(filepath.replace("\\", "/").split("/")[-1]))
+
                 dict_output = self.calc_per_task_for_oneuser(filepath)
                 total_output_list.append(dict_output)
-                print("Currently calculating stats for: {}".format(filepath.replace("\\", "/").split("/")[-1]))
 
                 # If the header isn't written yet
                 if header_not_written:
@@ -274,11 +275,6 @@ class GetStats:
         # For example, if the task is CH5, and the repeated task was named CH52, and prev_task
         # was stored as CH52, then nothing in the original data will match CH52
         prev_task = ""
-        # Also store the previous duplicate task name to add to the task_set
-        prev_duplicate_name = ""
-
-        # Duplicate flag: set to yes to change the cur_task to cur_task2, cur_task3, etc.
-        duplicate_flag = False
 
         # Iterate through all the tasks
         col_length = len(pd_dataframe.index)
@@ -292,28 +288,18 @@ class GetStats:
                     # Remember to set previous task to unchanged current task!
                     prev_task = cur_task
 
-                    # If duplicate flag was set in the previous runs, also add the previous duplicate name
-                    if duplicate_flag:
-                        task_set.add(prev_duplicate_name)
-
-                    # Change the cur_task to cur_task2, cur_task3, etc. if cur_task is already in the set
-                    duplicate_flag = cur_task in task_set
+                    # Change the cur_task to cur_taska, cur_taskb, etc. if cur_task is already in the set
+                    if cur_task in task_set:
+                        # Iterate through names until a name is not used yet
+                        count2 = 0
+                        new_name_temp = cur_task
+                        while new_name_temp in task_set:
+                            new_name_temp = cur_task + chr(ord('a') + count2)
+                            count2 += 1
+                        cur_task = new_name_temp
 
                     # Add the current task, whether the name is changed or not, into the task_set
                     task_set.add(cur_task)
-
-                # If the duplicate flag is set
-                if duplicate_flag:
-                    # Iterate through names until a name is not used yet
-                    count2 = 0
-                    new_name_temp = cur_task
-                    while new_name_temp in task_set:
-                        new_name_temp = cur_task + chr(ord('a') + count2)
-                        count2 += 1
-                    # Reassign cur_task to new_name_temp
-                    cur_task = new_name_temp
-                    # Also store previous duplicate name
-                    prev_duplicate_name = new_name_temp
 
                 # Initialize the dictionary if it doesn't exist yet
                 if cur_task not in output_dict:
@@ -377,7 +363,7 @@ class GetStats:
 
                     # Get stats per AOI
                     # Initialize if the AOI doesn't exist yet
-                    aoi_num_fix = "_".join((cur_aoi, "NumberOfFixations"))
+                    # aoi_num_fix = "_".join((cur_aoi, "NumberOfFixations"))
                     temp_dict_1 = output_dict[cur_task]
                     temp_dict_1[cur_aoi + "_NumberOfFixations"] += 1
                     temp_dict_1[cur_aoi + "_FixationDurationSum"] += cur_fixation_duration
@@ -389,7 +375,7 @@ class GetStats:
         # | Post stats calculation |
         # +------------------------+
         is_first_time = True
-        for cur_task in output_dict.keys():
+        for cur_task in task_set:
             temp_dict_1 = output_dict[cur_task]
             # Add keys to column headers, but only do it once
             if is_first_time:
@@ -400,29 +386,38 @@ class GetStats:
             is_first_time = False
             num_fixations = temp_dict_1["TotalNumFixationsInAOI"]
 
+            # Get standard deviation for fixation duration
+            list1 = temp_dict_1["FixationDuration_StandardDeviation"]
+            # If the list is empty, set the standard deviation to 0
+            temp_dict_1["FixationDuration_StandardDeviation"] = np.std(list1) if list1 else 0
+
+            # Get standard deviation for saccade length
+            list1 = temp_dict_1["Saccade_length_StandardDeviation"]
+            # If the list is empty, set the standard deviation to 0
+            temp_dict_1["Saccade_length_StandardDeviation"] = np.std(list1) if list1 else 0
+
+            # Get standard deviation for saccade absolute angle
+            list1 = temp_dict_1["Saccade_absolute_angle_StandardDeviation"]
+            # If the list is empty, set the standard deviation to 0
+            temp_dict_1["Saccade_absolute_angle_StandardDeviation"] = np.std(list1) if list1 else 0
+
+            # Get standard deviation for saccade relative angle
+            list1 = temp_dict_1["Saccade_relative_angle_StandardDeviation"]
+            # If the list is empty, set the standard deviation to 0
+            temp_dict_1["Saccade_relative_angle_StandardDeviation"] = np.std(list1) if list1 else 0
+
             if num_fixations != 0:
                 # Get average fixation duration
                 temp_dict_1["FixationDuration_Average"]  = temp_dict_1["FixationDuration_Sum"] / num_fixations
-                # Get standard deviation for fixation duration
-                temp_dict_1["FixationDuration_StandardDeviation"] = np.std(
-                    temp_dict_1["FixationDuration_StandardDeviation"])
 
                 # Get average saccade length
                 temp_dict_1["Saccade_length_Average"] = temp_dict_1["Saccade_length_Sum"] / num_fixations
-                # Get standard deviation for saccade length
-                temp_dict_1["Saccade_length_StandardDeviation"] = np.std(temp_dict_1["Saccade_length_StandardDeviation"])
 
                 # Get average saccade absolute angle
                 temp_dict_1["Saccade_absolute_angle_Average"] = temp_dict_1["Saccade_absolute_angle_Sum"] / num_fixations
-                # Get standard deviation for saccade absolute angle
-                temp_dict_1["Saccade_absolute_angle_StandardDeviation"] = np.std(
-                    temp_dict_1["Saccade_absolute_angle_StandardDeviation"])
 
                 # Get average saccade relative angle
                 temp_dict_1["Saccade_relative_angle_Average"] = temp_dict_1["Saccade_relative_angle_Sum"] / num_fixations
-                # Get standard deviation for saccade relative angle
-                temp_dict_1["Saccade_relative_angle_StandardDeviation"] = np.std(
-                    temp_dict_1["Saccade_relative_angle_StandardDeviation"])
 
                 # Now, calculate post-task per AOI
                 for aoi in aoi_list:
