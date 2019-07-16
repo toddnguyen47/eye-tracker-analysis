@@ -60,7 +60,7 @@ class AidsUsed:
                     else:
                         aids_used_list.append("")
 
-                df["Aids_Used"] = aids_used_list
+                df["Aids Used"] = aids_used_list
 
                 # get a new filename
                 new_filename = file.split(".")[:-1]
@@ -70,5 +70,53 @@ class AidsUsed:
                 new_file_fullpath = os.path.join(self.output_filedir, new_filename)
                 print("Exporting to {0}".format(new_file_fullpath[-45:]))
                 df.to_csv(new_file_fullpath)
+
+        print("Finished!")
+
+    def merge_aids_used_no_aids(self):
+        """
+        Merge the aids used with the AOI file without any aids used.
+        :return:
+        """
+        aids_used_dict = self.read_in_aids_used()
+
+        # For each file in the
+        for file in os.listdir(self.aoi_files_dir):
+            if file.endswith("csv"):
+                full_filepath = os.path.join(self.aoi_files_dir, file)
+                df = pd.read_csv(full_filepath, index_col=False)
+                df.fillna(value="", inplace=True)
+
+                list_row = []
+                # For each row
+                for index, row in df.iterrows():
+                    full_name = row["Name"].strip().replace('\'', "")
+                    task_id = row["Current_task"]
+
+                    # If not pretask
+                    if str(task_id).lower() != "pretask".lower():
+                        key = "{0} {1}".format(full_name, task_id)
+                        aids_used = aids_used_dict[key]
+                        if aids_used.lower() == "no".lower():
+                            row_to_list = row.tolist()
+                            # row_to_list.append(aids_used)
+                            list_row.append(row_to_list)
+
+
+                # get a new filename
+                new_filename = file.split(".")[:-1]
+                new_filename.append("_NoAidsUsed.csv")
+                new_filename = "".join(new_filename)
+
+                new_file_fullpath = os.path.join(self.output_filedir, new_filename)
+                print("Exporting to {0}".format(new_file_fullpath[-45:]))
+                with open(new_file_fullpath, "w") as file2:
+                    headers = df.columns.tolist()
+                    # headers.append("Aids Used")
+                    file2.write(",".join(headers))
+                    file2.write("\n")
+                    for line in list_row:
+                        file2.write(",".join([str(x) for x in line]))
+                        file2.write("\n")
 
         print("Finished!")

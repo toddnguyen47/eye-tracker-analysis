@@ -119,4 +119,4 @@ elif args.command_name == valid_commands[5]:
         aoi_files_dir=args.file_directory,
         output_filedir=args.output_directory
     )
-    aids_used_obj.merge_aids_used()
+    aids_used_obj.merge_aids_used_no_aids()
