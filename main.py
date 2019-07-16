@@ -4,12 +4,13 @@ import core.calculations as calculations
 import core.label_graphs as label_graphs
 from core.get_stats import GetStats
 from core.area_of_interest import AreaOfInterest
+from core.aids_used import AidsUsed
 import argparse
 import sys
 import json
 
 valid_commands = ["fixation_collapse", "label_graphs", "saccade_calc", "stats_calc",
-                  "aoi_calc"]
+                  "aoi_calc", "aids_used_calc"]
 
 # Load in the params.json file
 with open("params.json", "r") as file:
@@ -68,6 +69,14 @@ parser_aoi_calc = subparsers.add_parser(valid_commands[4], help="Calculate wheth
 parser_aoi_calc.add_argument("file_directory", help="The directory where the collapsed CSV files \
     are stored.")
 
+# Create parser for the aids used command
+parser_aids_used = subparsers.add_parser(valid_commands[5], help="Combine information from the AIDS used CSV file \
+    and the AOI file into one CSV file.")
+parser_aids_used.add_argument("aids_used_filepath", help="The full path to the aids used file.")
+parser_aids_used.add_argument("file_directory", help="The directory where the collapsed CSV files \
+    are stored.")
+parser_aids_used.add_argument("output_directory", help="The directory of where the output files will be.")
+
 # Compile all the command line parser and subparsers
 args = parser.parse_args()
 
@@ -102,3 +111,12 @@ elif args.command_name == valid_commands[3]:
 elif args.command_name == valid_commands[4]:
     aoi_obj = AreaOfInterest()
     aoi_obj.execute(args.file_directory)
+
+# Handle Aids used merging
+elif args.command_name == valid_commands[5]:
+    aids_used_obj = AidsUsed(
+        aids_used_filepath=args.aids_used_filepath,
+        aoi_files_dir=args.file_directory,
+        output_filedir=args.output_directory
+    )
+    aids_used_obj.merge_aids_used()
