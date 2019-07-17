@@ -60,6 +60,12 @@ class GetStats:
 
         input_df = pd.read_csv(full_path_to_csv_file, index_col=False)
 
+        # If there is nothing in the list
+        if len(input_df.index) < 1:
+            empty_list = [""]  * (len(self._header_row_hashset) - 1)
+            return_list += empty_list
+            return return_list
+
         # Get the basic stats: sum, average, and standard deviation
         for col_name in self._col_names_list:
             column = input_df[col_name]
@@ -210,28 +216,43 @@ class GetStats:
                 print("Currently calculating stats for: {}".format(filepath.replace("\\", "/").split("/")[-1]))
 
                 dict_output = self.calc_per_task_for_oneuser(filepath)
-                total_output_list.append(dict_output)
 
-                # If the header isn't written yet
-                if header_not_written:
-                    header_not_written = False
-                    with open(csv_output, "w") as file:
-                        file.write(",".join(self._header_per_task))
-                        file.write("\n")
-
-                with open(csv_output, "a", buffering=4096) as file:
-                    for key in dict_output.keys():
-                        temp_list = []
-                        for key2 in dict_output[key].keys():
-                            temp_list.append(dict_output[key][key2])
-
-                        # Should never happen
-                        if len(temp_list) != len(self._header_per_task):
-                            raise ValueError("Per task headers length does not match with length count of a row!")
-
-                        temp_list = [str(x) for x in temp_list]
+                # If empty dictionary
+                if not dict_output:
+                    with open(csv_output, "a", buffering=4096) as file:
+                        participant_id = ""
+                        for char in file1:
+                            if char.isdigit():
+                                participant_id = "".join((participant_id, char))
+                        temp_list = [participant_id]
+                        temp_list += ([""] * (len(self._header_row_hashset) - 1))
                         file.write(",".join(temp_list))
                         file.write("\n")
+
+                # Not empty dictionary
+                else:
+                    total_output_list.append(dict_output)
+
+                    # If the header isn't written yet
+                    if header_not_written:
+                        header_not_written = False
+                        with open(csv_output, "w") as file:
+                            file.write(",".join(self._header_per_task))
+                            file.write("\n")
+
+                    with open(csv_output, "a", buffering=4096) as file:
+                        for key in dict_output.keys():
+                            temp_list = []
+                            for key2 in dict_output[key].keys():
+                                temp_list.append(dict_output[key][key2])
+
+                            # Should never happen
+                            if len(temp_list) != len(self._header_per_task):
+                                raise ValueError("Per task headers length does not match with length count of a row!")
+
+                            temp_list = [str(x) for x in temp_list]
+                            file.write(",".join(temp_list))
+                            file.write("\n")
 
         print("Finished exporting to {0}".format(csv_output.replace("\\", "/")))
 
@@ -258,7 +279,7 @@ class GetStats:
         task_col = pd_dataframe["Current_task"]
         aoi_col = pd_dataframe["AOI"]
 
-        # # Get the name of the AOIs
+        # Get the name of the AOIs
         aoi_json_data = utils.load_in_aoi_json()
         temp_data = aoi_json_data["HighBar"]
         aoi_list = []
